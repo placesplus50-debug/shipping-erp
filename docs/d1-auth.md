@@ -13,3 +13,10 @@ SECURITY LIMITATIONS BEFORE PRODUCTION:
 - No Google Sheets bridge, driver order authorization, order status writes, accountant approvals, password reset, or user management yet.
 - Test the endpoints on a preview deployment, validate function routing and D1 preview binding, then integrate UI only after review.
 - Never send passwords or secrets in chat, URLs, or GitHub.
+
+## Login throttle deployment prerequisites (2026-10-17)
+1. In D1 Console for shipping-pulse-db, run the SQL from `migrations/0002_auth_attempts.sql` (only creates the throttle table and index).
+2. In Cloudflare Pages **Preview** Variables and Secrets, create secret `AUTH_RATE_LIMIT_KEY` with a securely generated random value of at least 32 characters. Never commit or paste this value in chat.
+3. Wait for a new Preview deployment; test /api/auth/me (unauthenticated => HTTP 401) and login rejection without exposing credentials.
+4. The current throttle is **per normalized email**, not per IP, and is not a substitute for edge-level rate limiting. Attackers could intentionally lock an email temporarily; review before production.
+5. Preview and Production currently use the same D1 database. Never create test admin accounts or alter existing user records as part of these checks.
