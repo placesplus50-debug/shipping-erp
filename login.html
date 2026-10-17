@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تسجيل الدخول | Shipping Pulse</title>
+<style>
+:root{font-family:Tahoma,Arial,sans-serif;color:#1b2940;background:#f5f7fb}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 85% 10%,#ffdfcb 0,transparent 34%),#f5f7fb}
+main{width:min(100%,430px);background:white;padding:34px;border-radius:22px;box-shadow:0 18px 55px #17243d18;border:1px solid #e8edf3}
+.brand{display:flex;align-items:center;gap:13px;font-size:22px;font-weight:800;color:#13243c}.logo{background:#f97336;color:white;padding:12px;border-radius:14px}h1{font-size:24px;margin:32px 0 7px}p{color:#718097;line-height:1.8;margin:0 0 26px}label{display:block;font-size:13px;font-weight:bold;margin:18px 0 7px}input{width:100%;border:1px solid #dce3ed;border-radius:10px;padding:14px;font-size:15px;direction:ltr;text-align:left}input:focus{outline:2px solid #ffb28c;border-color:#f97336}button{margin-top:25px;width:100%;padding:14px;background:#f97336;color:white;border:0;border-radius:11px;font-weight:bold;font-size:15px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.message{margin-top:16px;min-height:24px;color:#c04435}.ok{color:#178252}.small{font-size:12px;color:#8390a2;margin-top:24px;text-align:center}
+</style></head><body><main>
+<div class="brand"><span class="logo">📦</span><span>Shipping Pulse</span></div>
+<h1>تسجيل الدخول</h1><p>ادخل بيانات حسابك للوصول إلى نظام الشحن والتحصيل.</p>
+<form id="login"><label for="email">البريد الإلكتروني</label><input id="email" name="email" type="email" autocomplete="username" required maxlength="254">
+<label for="password">كلمة المرور</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+<button id="submit" type="submit">تسجيل الدخول</button><div class="message" id="message" role="status" aria-live="polite"></div></form>
+<div class="small">نسخة اختبار — لا تستخدم بيانات الشحن الحقيقية حاليًا</div>
+</main><script>
+const form=document.getElementById('login'),msg=document.getElementById('message'),btn=document.getElementById('submit');
+form.addEventListener('submit',async e=>{e.preventDefault();btn.disabled=true;msg.textContent='جارٍ التحقق...';msg.className='message';
+try{const response=await fetch('/api/auth/login',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({email:form.email.value,password:form.password.value})});
+const result=await response.json();if(!response.ok){msg.textContent=response.status===429?'محاولات كثيرة. حاول بعد 15 دقيقة.':response.status===503?'الخدمة غير مهيأة بعد. تواصل مع المسؤول.':'البريد الإلكتروني أو كلمة المرور غير صحيحة.';return}
+form.password.value='';msg.className='message ok';msg.textContent='تم تسجيل الدخول بنجاح. هذه نسخة اختبار ولم يتم تفعيل لوحة البيانات المحمية بعد.';
+}catch{msg.textContent='تعذر الاتصال بالخادم. حاول مرة أخرى.'}finally{btn.disabled=false}});
+</script></body></html>
