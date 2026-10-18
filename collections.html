@@ -17,6 +17,8 @@ function render(){
  const title=document.createElement('h3');title.textContent=r.order_id+' — '+r.driver_id;card.append(title);
  const info=document.createElement('p');info.textContent='المبلغ: '+fmt(r.amount_cents)+' ج.م | الطريقة: '+r.method+' | الفلوس مع: '+r.holder+' | الحالة: '+(r.decision||'pending');card.append(info);
  const date=document.createElement('small');date.textContent=r.created_at;card.append(date);
+ if(r.review_user_id){const audit=document.createElement('p');audit.className='record-meta';audit.textContent='مراجعة بواسطة مستخدم #'+r.review_user_id+(r.review_note?' • '+r.review_note:'');card.append(audit)}
+ if(r.handover_id){const audit=document.createElement('p');audit.className='record-meta';audit.textContent='توريد بواسطة مستخدم #'+r.handover_reviewer_user_id+(r.handover_note?' • '+r.handover_note:'');card.append(audit)}
  if(r.decision==='approved'&&r.method==='cash'&&r.holder==='driver'&&!r.handover_id){const b=document.createElement('button');b.textContent='تأكيد استلام النقدية';b.onclick=()=>handover(r.id);card.append(b)}else if(r.handover_id){const tag=document.createElement('p');tag.textContent='تم توريد النقدية إلى '+r.handover_destination;card.append(tag)}
  if(!r.decision){const actions=document.createElement('div');actions.className='actions';for(const [label,decision] of [['اعتماد','approved'],['رفض','rejected']]){const b=document.createElement('button');b.textContent=label;b.onclick=()=>review(r.id,decision);actions.append(b)}card.append(actions)}
  root.append(card);
@@ -27,7 +29,7 @@ async function load(){
  const me=await fetch('/api/auth/me');if(me.status===401){location.href='/login.html';return}
  const who=await me.json();if(!['super_admin','accountant','admin'].includes(who.user.role)){el('error').textContent='غير مصرح';return}
  const res=await fetch('/api/collections',{cache:'no-store'}),data=await res.json();if(!res.ok)throw Error(data.error);
- rows=data.collections;el('error').textContent='';render()
+ rows=data.collections;el('error').textContent=data.truncated?'تنبيه: يتم عرض آخر 2000 حركة فقط. التصدير غير شامل لكل السجل.':'';render()
  }catch(e){el('error').textContent=e.message}
 }
 function showDialog({title,description,fields=[],confirmLabel='تأكيد',danger=false}){
