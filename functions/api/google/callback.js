@@ -23,10 +23,11 @@ export async function onRequestGet({request,env}){
  const granted=String((await scopeCheck.json()).scope||"").split(/\s+/);
  if(!granted.includes("https://www.googleapis.com/auth/spreadsheets"))return reply({error:"Google Sheets write permission was not granted; previous connection preserved"},403);
  try{
-  const key=await encryptionKey(env.GOOGLE_TOKEN_ENCRYPTION_KEY),iv=crypto.getRandomValues(new Uint8Array(12));
+  let key;try{key=await encryptionKey(env.GOOGLE_TOKEN_ENCRYPTION_KEY)}catch{return reply({error:"Google encryption key is invalid",code:"INVALID_ENCRYPTION_KEY"},503)}
+  const iv=crypto.getRandomValues(new Uint8Array(12));
   const encrypted=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},key,enc.encode(tokens.refresh_token)));
   const payload=b64(iv)+"."+b64(encrypted);
-  await env.DB.prepare("INSERT INTO google_oauth_tokens(id,refresh_token_ciphertext,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET refresh_token_ciphertext=excluded.refresh_token_ciphertext,updated_at=CURRENT_TIMESTAMP").bind(payload).run();
+  try{await env.DB.prepare("INSERT INTO google_oauth_tokens(id,refresh_token_ciphertext,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET refresh_token_ciphertext=excluded.refresh_token_ciphertext,updated_at=CURRENT_TIMESTAMP").bind(payload).run()}catch{return reply({error:"Google token database write failed",code:"TOKEN_DATABASE_WRITE_FAILED"},503)}
   return reply({connected:true,message:"Google Sheets read-write authorization saved; sync still disabled until verified"});
  }catch{return reply({error:"Token storage unavailable; run preview migrations and check encryption key"},503)}
 }
