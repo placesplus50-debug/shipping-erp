@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>شحناتي | Shipping Pulse</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+:root{font-family:Cairo,Tahoma,Arial,sans-serif;color:#291b42;background:#f8f7fc}*{box-sizing:border-box}body{margin:0}header{background:#291b42;color:white;padding:18px max(18px,calc((100% - 900px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}header b{font-size:21px}header small{color:#d8cbed}main{max-width:900px;margin:auto;padding:24px 16px 60px}.heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}h1{margin:0;font-size:25px}p{color:#7b728c;margin:3px 0 18px}.tag{background:#e5f5c6;color:#456321;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0}.stat,.card{background:white;border:1px solid #eee9f3;border-radius:17px;padding:18px;box-shadow:0 6px 25px #291b4208}.stat small{color:#827891}.stat strong{display:block;font-size:27px}.toolbar{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap}input,select,button{font:inherit;border-radius:11px;padding:10px 12px;border:1px solid #e3dcea;background:white}input{flex:1;min-width:170px}button{cursor:pointer;font-weight:700}button:disabled{opacity:.6}.orders{display:grid;gap:12px}.card h2{font-size:17px;margin:0}.cardtop,.details{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.details{margin-top:13px;color:#625870;font-size:13px;line-height:2}.status{border-radius:9px;background:#f0eafa;color:#614191;padding:5px 10px;font-weight:800;font-size:12px}.money{color:#41275f;font-size:18px;font-weight:800}.note{font-size:12px;color:#80758f;margin-top:10px}.notice{background:#f0eafa;border-radius:12px;padding:12px 15px;font-size:12px;color:#563b75;margin:16px 0}.error{color:#b53248}.empty{text-align:center;padding:38px;color:#827891}.logout{color:white;text-decoration:none;border:1px solid #ffffff55;padding:7px 10px;border-radius:10px;font-size:12px}@media(max-width:460px){header b{font-size:17px}h1{font-size:22px}.stat strong{font-size:23px}}
+</style></head><body>
+<header><div><b>📦 Shipping Pulse</b><br><small id="who">لوحة المندوب</small></div><span class="tag">Preview</span></header>
+<main><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
+<div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي للتحصيل (COD Due)</small><strong id="cod">—</strong></div></div>
+<div class="notice">مرحلة اختبار: البيانات تُقرأ مباشرة من Google Sheets. تغيير حالة الشحنة وتسجيل التحصيل غير مفعّلين بعد، ولن يتم تعديل الشيت.</div>
+<div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
+<div id="message" role="status" aria-live="polite"></div><section id="orders" class="orders"></section></main>
+<script>
+const $=id=>document.getElementById(id);let orders=[];
+function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
+function node(tag,cls,txt){const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el}
+function render(){
+ const q=$('search').value.trim().toLowerCase(),f=$('filter').value;
+ const visible=orders.filter(o=>(!f||o['Shipping Status']===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
+ const root=$('orders');root.replaceChildren();
+ if(!visible.length){root.append(node('div','empty','لا توجد شحنات مطابقة'));return}
+ for(const o of visible){
+ const c=node('article','card'),top=node('div','cardtop'),left=node('div');
+ left.append(node('h2','',o['Order ID']||'—'),node('div','note',o.Customer||'—'));
+ top.append(left,node('span','status',o['Shipping Status']||'غير محدد'));c.append(top);
+ const details=node('div','details');
+ details.append(node('span','', '📍 '+(o['City / Area']||'—')),node('span','', '💳 '+(o['Payment Type']||'—')),node('span','', 'حالة الدفع: '+(o['Payment Status']||'—')));
+ c.append(details);
+ const amount=node('div','money','المتبقي للتحصيل: '+fmt(o['COD Due'])+' ج.م');c.append(amount);
+ if(o.Notes)c.append(node('div','note','ملاحظات: '+o.Notes));
+ root.append(c)
+ }
+}
+async function load(){
+ $('reload').disabled=true;$('message').textContent='جارٍ تحميل الشحنات...';
+ try{
+ const meRes=await fetch('/api/auth/me',{credentials:'same-origin',cache:'no-store'});
+ if(meRes.status===401){location.href='/login.html';return}
+ const me=await meRes.json();if(!meRes.ok)throw Error('تعذر التحقق من الجلسة');
+ if(me.user.role!=='driver'){ $('message').textContent='هذه الصفحة مخصصة للمندوبين فقط';return }
+ $('who').textContent=(me.user.name||'مندوب')+' • '+(me.user.driverId||'بدون كود');
+ const res=await fetch('/api/orders',{credentials:'same-origin',cache:'no-store'});
+ if(res.status===401){location.href='/login.html';return}
+ const data=await res.json();if(!res.ok)throw Error(data.error||'تعذر تحميل الشحنات');
+ if(data.scope!=='assigned_driver'||!Array.isArray(data.orders))throw Error('تعذر التحقق من نطاق شحنات المندوب');
+ orders=data.orders;
+ $('count').textContent=fmt(orders.length);
+ $('cod').textContent=fmt(orders.reduce((s,o)=>s+(Number(String(o['COD Due']||0).replace(/,/g,''))||0),0))+' ج.م';
+ const selected=$('filter').value;const states=[...new Set(orders.map(o=>o['Shipping Status']).filter(Boolean))];
+ $('filter').replaceChildren(new Option('كل الحالات',''),...states.map(s=>new Option(s,s)));$('filter').value=states.includes(selected)?selected:'';
+ $('message').textContent='';render();
+ }catch(e){$('message').textContent=e.message;$('message').className='error';$('orders').replaceChildren()}finally{$('reload').disabled=false}
+}
+$('reload').addEventListener('click',load);$('search').addEventListener('input',render);$('filter').addEventListener('change',render);load();
+</script></body></html>
