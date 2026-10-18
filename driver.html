@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>شحناتي | Shipping Pulse</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"><meta name="theme-color" content="#251741">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+:root{font-family:Cairo,Tahoma,Arial,sans-serif;color:#291b42;background:#f8f7fc}*{box-sizing:border-box}body{margin:0}header{background:#291b42;color:white;padding:18px max(18px,calc((100% - 900px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}header b{font-size:21px}header small{color:#d8cbed}main{max-width:900px;margin:auto;padding:24px 16px 60px}.heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}h1{margin:0;font-size:25px}p{color:#7b728c;margin:3px 0 18px}.tag{background:#e5f5c6;color:#456321;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0}.stat,.card{background:white;border:1px solid #eee9f3;border-radius:17px;padding:18px;box-shadow:0 6px 25px #291b4208}.stat small{color:#827891}.stat strong{display:block;font-size:27px}.toolbar{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap}input,select,button{font:inherit;border-radius:11px;padding:10px 12px;border:1px solid #e3dcea;background:white}input{flex:1;min-width:170px}button{cursor:pointer;font-weight:700}button:disabled{opacity:.6}.orders{display:grid;gap:12px}.card h2{font-size:17px;margin:0}.cardtop,.details{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.details{margin-top:13px;color:#625870;font-size:13px;line-height:2}.status{border-radius:9px;background:#f0eafa;color:#614191;padding:5px 10px;font-weight:800;font-size:12px}.money{color:#41275f;font-size:18px;font-weight:800}.note{font-size:12px;color:#80758f;margin-top:10px}.notice{background:#f0eafa;border-radius:12px;padding:12px 15px;font-size:12px;color:#563b75;margin:16px 0}.error{color:#b53248}.empty{text-align:center;padding:38px;color:#827891}.logout{color:white;text-decoration:none;border:1px solid #ffffff55;padding:7px 10px;border-radius:10px;font-size:12px}@media(max-width:460px){header b{font-size:17px}h1{font-size:22px}.stat strong{font-size:23px}}
+ .modal-backdrop{position:fixed;inset:0;background:#1c1326a8;display:grid;place-items:center;padding:15px;z-index:50}.modal{background:#fff;border-radius:22px;padding:24px;width:min(440px,100%);box-shadow:0 18px 60px #20132d45}.modal h2{margin:0 0 8px;font-size:21px}.modal p{margin:0 0 16px}.modal label{display:block;font-weight:700;margin:12px 0 6px}.modal input,.modal select{display:block;width:100%;max-width:none}.modal .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.modal .secondary{background:#f2f0f7;color:#4b3c5d}</style><style>
+:root{--sp-deep:#251741;--sp-purple:#5640ad;--sp-lime:#d2ec6d;--sp-bg:#f7f6fb}
+.sp-logo{display:inline-block;width:38px;height:38px;vertical-align:middle;object-fit:contain;border-radius:11px;flex-shrink:0}
+.brand .sp-logo{width:42px;height:42px;margin-inline-end:8px}
+.brand:has(.sp-logo) span.logo{background:none}
+body{background-color:var(--sp-bg)}
+button,a,input,select{transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a6a0e6;outline-offset:3px}
+dialog{border-radius:20px!important;box-shadow:0 22px 70px #25174135!important}
+@media(max-width:680px){.sp-logo{width:34px;height:34px}}
+</style><style>
+body{background:linear-gradient(180deg,#f0edf9,#f8f7fc 320px);color:#251741}
+header{background:linear-gradient(110deg,#201534,#322255);box-shadow:0 6px 28px #25174120}
+main{max-width:1050px}.heading{padding:10px 0}.heading h1{font-size:28px}
+.stat,.card{border-radius:20px;border-color:#eae6f2;box-shadow:0 10px 28px #25174109}
+.stat{position:relative;overflow:hidden}.stat:before{content:"";position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:#7560bf}
+.stat strong{color:#2e1e4b}
+.card{transition:transform .18s ease,box-shadow .18s ease}.card:hover{box-shadow:0 12px 32px #25174115;transform:translateY(-2px)}
+.status{background:#eee8fc;color:#5842a8}.notice{background:#eeeaf7;color:#6a568c}
+button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visible{outline:3px solid #b9b0ed;outline-offset:2px}
+.toolbar input,.toolbar select{background:#fff;box-shadow:0 4px 16px #25174106}
+.mobile-tabs{display:none}
+@media(max-width:650px){main{padding:17px 12px 90px}.stats{gap:9px}.stat{padding:15px}.card{padding:16px}.details{gap:12px}.mobile-tabs{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;justify-content:space-around;background:#fff;border-top:1px solid #e9e3f2;padding:12px 5px max(12px,env(safe-area-inset-bottom));box-shadow:0 -8px 28px #25174110}.mobile-tabs a{text-decoration:none;color:#716585;font-weight:700;font-size:12px}.mobile-tabs .selected{color:#5842a8}}
+</style><style>.role-guide{padding:30px;max-width:650px;margin:24px auto;text-align:center}.role-guide h2{font-size:23px}.role-link{display:inline-block;background:#5842a8;color:white;text-decoration:none;padding:12px 22px;border-radius:12px;font-weight:800;margin-top:12px}.role-link:hover{background:#39266e}</style><link rel="stylesheet" href="/assets/app-shell.css"><script src="/assets/app-shell.js"></script></head><body class="sp-app sp-page-driver" data-page="driver"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav" href="/collections.html" data-staff><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a><a class="sp-nav active" href="/driver.html" data-driver-link aria-current="page"><span aria-hidden="true">◉</span>واجهة المندوب</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Preview</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / شحناتي</small><h1>شحناتي</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog>
+
+<main id="spMain" tabindex="-1"><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
+<div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي غير المسجل للتحصيل</small><strong id="cod">—</strong></div></div>
+<div class="notice">مرحلة اختبار: البيانات تُقرأ مباشرة من Google Sheets. تغيير حالة الشحنة وتسجيل التحصيل محفوظان في Preview فقط، دون تعديل Google Sheets.</div>
+<div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
+<div id="message" role="status" aria-live="polite"></div><section id="orders" class="orders"></section></main>
+<script>
+const $=id=>document.getElementById(id);let orders=[],claims=[],historyComplete=true;
+function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
+function node(tag,cls,txt){const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el}
+function remaining(o){const due=Math.round((Number(String(o['COD Due']||0).replace(/,/g,''))||0)*100);const claimed=claims.filter(c=>c.order_id===o['Order ID']&&c.decision!=='rejected').reduce((n,c)=>n+c.amount_cents,0);return Math.max(0,due-claimed)/100}
+function render(){
+ const q=$('search').value.trim().toLowerCase(),f=$('filter').value;
+ const visible=orders.filter(o=>(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
+ const root=$('orders');root.replaceChildren();
+ if(!visible.length){root.append(node('div','empty','لا توجد شحنات مطابقة'));return}
+ for(const o of visible){
+ const c=node('article','card'),top=node('div','cardtop'),left=node('div');
+ left.append(node('h2','',o['Order ID']||'—'),node('div','note',o.Customer||'—'));
+ top.append(left,node('span','status',o._effectiveStatus||o['Shipping Status']||'غير محدد'));c.append(top);
+ const details=node('div','details');
+ details.append(node('span','', '📍 '+(o['City / Area']||'—')),node('span','', '💳 '+(o['Payment Type']||'—')),node('span','', 'حالة الدفع: '+(claims.some(c=>c.order_id===o['Order ID']&&c.decision==='approved')?(remaining(o)===0?'التحصيل معتمد بالكامل':'تحصيل معتمد جزئيًا'):claims.some(c=>c.order_id===o['Order ID']&&!c.decision)?'تحصيل بانتظار المراجعة':(o['Payment Status']||'—'))));
+ c.append(details);
+ const finalReturn=(o._effectiveStatus||o['Shipping Status'])==='Returned';
+ const amount=node('div','money',finalReturn?'مرتجع — لا يوجد تحصيل مطلوب':(o._effectiveStatus==='Delivery failed'?'تعذر التسليم — لا تحصيل حتى إعادة التسليم':'المتبقي غير المسجل: '+fmt(remaining(o))+' ج.م'));c.append(amount);
+ if(o.Notes)c.append(node('div','note','ملاحظات: '+o.Notes));
+ const current=o._effectiveStatus||o['Shipping Status'];
+ if(current==='Delivered'&&remaining(o)>0&&historyComplete){
+  const button=node('button','','تسجيل تحصيل');button.addEventListener('click',()=>collect(o,button));c.append(button);
+ }
+
+ const next={'Assigned':['Out for delivery','Delivery failed'],'Out for delivery':['Delivered','Returned','Delivery failed'],'Delivery failed':['Out for delivery','Returned']}[current]||[];
+ if(next.length){const actions=node('div','details');for(const st of next){const btn=node('button','', 'تغيير إلى '+st);btn.addEventListener('click',()=>changeStatus(o,st,btn));actions.append(btn)}c.append(actions)}
+ root.append(c)
+ }
+}
+function collectDialog(order,maxAmount){
+ return new Promise(resolve=>{
+ const backdrop=node('div','modal-backdrop');const form=node('form','modal');
+ const title=node('h2','','تسجيل تحصيل — '+order['Order ID']);form.append(title);
+ const hint=node('p','','المتبقي غير المسجل: '+maxAmount.toFixed(2)+' ج.م • التحصيل يحتاج اعتماد المحاسب');form.append(hint);
+ const amountLabel=node('label','','المبلغ بالجنيه');const amount=document.createElement('input');amount.type='number';amount.min='0.01';amount.step='0.01';amount.max=String(maxAmount);amount.value=String(maxAmount);amount.required=true;form.append(amountLabel,amount);
+ const methodLabel=node('label','','طريقة التحصيل');const method=document.createElement('select');
+ for(const [v,t] of [['cash','نقدي مع المندوب'],['company_transfer','تحويل للشركة'],['paymob','Paymob']])method.add(new Option(t,v));
+ form.append(methodLabel,method);
+ const buttons=node('div','actions');const cancel=node('button','secondary','إلغاء');cancel.type='button';const submit=node('button','','تسجيل للمراجعة');submit.type='submit';buttons.append(cancel,submit);form.append(buttons);backdrop.append(form);document.body.append(backdrop);
+ const close=value=>{backdrop.remove();resolve(value)};cancel.onclick=()=>close(null);backdrop.onclick=e=>{if(e.target===backdrop)close(null)};
+ form.onsubmit=e=>{e.preventDefault();const value=Number(amount.value);if(!Number.isFinite(value)||value<=0||Math.round(value*100)>Math.round(maxAmount*100)){amount.setCustomValidity('المبلغ أكبر من المتبقي');amount.reportValidity();return}close({amount:value,method:method.value})};
+ amount.oninput=()=>amount.setCustomValidity('');amount.focus();
+ });
+}
+function notice(title,message,confirmMode=false){
+ return new Promise(resolve=>{
+ const overlay=document.createElement('div');overlay.className='modal-backdrop';
+ const panel=document.createElement('div');panel.className='modal';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
+ const heading=document.createElement('h2');heading.textContent=title;const body=document.createElement('p');body.textContent=message;
+ const actions=document.createElement('div');actions.className='actions';
+ const accept=document.createElement('button');accept.textContent=confirmMode?'تأكيد':'حسنًا';
+ const cancel=document.createElement('button');cancel.textContent='إلغاء';cancel.className='secondary';
+ const close=ok=>{overlay.remove();resolve(ok)};
+ accept.onclick=()=>close(true);cancel.onclick=()=>close(false);overlay.onclick=e=>{if(e.target===overlay)close(false)};
+ actions.append(accept);if(confirmMode)actions.append(cancel);panel.append(heading,body,actions);overlay.append(panel);document.body.append(overlay);accept.focus();
+ });
+}
+async function collect(order,btn){
+ const due=remaining(order);if(due<=0)return;
+ const values=await collectDialog(order,due);if(!values)return;
+ const {amount,method}=values,holder=method==='cash'?'driver':'company';
+ btn.disabled=true;
+ try{
+ const bytes=crypto.getRandomValues(new Uint8Array(16)),requestId='col_'+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+ const res=await fetch('/api/collections',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({orderId:order['Order ID'],amountCents:Math.round(amount*100),method,holder,requestId})});
+ const data=await res.json();if(!res.ok)throw Error(data.error||'تعذر التسجيل');
+ await load();await notice('تم تسجيل التحصيل','تم تسجيل التحصيل للمراجعة، ولم يتم اعتماده بعد');
+ }catch(e){await notice('تعذر الحفظ',e.message)}finally{btn.disabled=false}
+}
+async function changeStatus(order,status,btn){
+ if(!await notice('تأكيد تغيير حالة الشحنة',order['Order ID']+' ← '+status,true))return;
+ btn.disabled=true;
+ try{
+  const bytes=crypto.getRandomValues(new Uint8Array(16));const requestId='status_'+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+  const res=await fetch('/api/driver-status',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({orderId:order['Order ID'],status,requestId})});
+  const data=await res.json();
+  if(!res.ok)throw Error(data.error||'تعذر حفظ الحالة');
+  order._effectiveStatus=status;render();await notice('تم تحديث الحالة','تم حفظ الحالة في قاعدة بيانات Preview.');
+ }catch(e){await notice('تعذر حفظ الحالة',e.message)}finally{btn.disabled=false}
+}
+async function load(){
+ $('reload').disabled=true;$('message').textContent='جارٍ تحميل الشحنات...';
+ try{
+ const me=await SP.ready;if(!me)return;
+ if(me.user.role!=='driver'){ $('message').textContent='هذه الصفحة مخصصة للمندوبين فقط';return }
+ $('username').textContent=(me.user.name||'مندوب')+' • '+(me.user.driverId||'بدون كود');
+ const res=await fetch('/api/orders',{credentials:'same-origin',cache:'no-store'});
+ if(res.status===401){location.href='/login.html';return}
+ const data=await res.json();if(!res.ok)throw Error(data.error||'تعذر تحميل الشحنات');
+ if(data.scope!=='assigned_driver'||!Array.isArray(data.orders))throw Error('تعذر التحقق من نطاق شحنات المندوب');
+ orders=data.orders.map(o=>({...o,_effectiveStatus:o['Effective Shipping Status']||o['Shipping Status']}));
+ const claimResponse=await fetch('/api/collections',{credentials:'same-origin',cache:'no-store'});
+ if(!claimResponse.ok)throw Error('تعذر تحميل التحصيلات');
+ const claimData=await claimResponse.json();if(!Array.isArray(claimData.collections))throw Error('بيانات التحصيل غير متاحة');
+ claims=claimData.collections;
+ historyComplete=!claimData.truncated;
+ if(!historyComplete)throw Error('سجل التحصيل تجاوز حد العرض؛ تم إيقاف تسجيل تحصيلات جديدة لحماية الأرصدة');
+ $('count').textContent=fmt(orders.length);
+ $('cod').textContent=fmt(orders.filter(o=>!['Returned','Delivery failed'].includes(o._effectiveStatus)).reduce((s,o)=>s+remaining(o),0))+' ج.م';
+ const selected=$('filter').value;const states=[...new Set(orders.map(o=>o._effectiveStatus||o['Shipping Status']).filter(Boolean))];
+ $('filter').replaceChildren(new Option('كل الحالات',''),...states.map(s=>new Option(s,s)));$('filter').value=states.includes(selected)?selected:'';
+ $('message').textContent='';render();
+ }catch(e){$('message').textContent=e.message;$('message').className='error';$('orders').replaceChildren()}finally{$('reload').disabled=false}
+}
+$('reload').addEventListener('click',load);$('search').addEventListener('input',render);$('filter').addEventListener('change',render);load();
+</script></body></html>

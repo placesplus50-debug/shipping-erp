@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تسجيل الدخول | Shipping Pulse</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"><meta name="theme-color" content="#251741">
+<style>
+:root{font-family:Tahoma,Arial,sans-serif;color:#1b2940;background:#f5f7fb}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 85% 10%,#ffdfcb 0,transparent 34%),#f5f7fb}
+main{width:min(100%,430px);background:white;padding:34px;border-radius:22px;box-shadow:0 18px 55px #17243d18;border:1px solid #e8edf3}
+.brand{display:flex;align-items:center;gap:13px;font-size:22px;font-weight:800;color:#13243c}.logo{background:#f97336;color:white;padding:12px;border-radius:14px}h1{font-size:24px;margin:32px 0 7px}p{color:#718097;line-height:1.8;margin:0 0 26px}label{display:block;font-size:13px;font-weight:bold;margin:18px 0 7px}input{width:100%;border:1px solid #dce3ed;border-radius:10px;padding:14px;font-size:15px;direction:ltr;text-align:left}input:focus{outline:2px solid #ffb28c;border-color:#f97336}button{margin-top:25px;width:100%;padding:14px;background:#f97336;color:white;border:0;border-radius:11px;font-weight:bold;font-size:15px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.message{margin-top:16px;min-height:24px;color:#c04435}.ok{color:#178252}.small{font-size:12px;color:#8390a2;margin-top:24px;text-align:center}
+</style><style>
+:root{--sp-deep:#251741;--sp-purple:#5640ad;--sp-lime:#d2ec6d;--sp-bg:#f7f6fb}
+.sp-logo{display:inline-block;width:38px;height:38px;vertical-align:middle;object-fit:contain;border-radius:11px;flex-shrink:0}
+.brand .sp-logo{width:42px;height:42px;margin-inline-end:8px}
+.brand:has(.sp-logo) span.logo{background:none}
+body{background-color:var(--sp-bg)}
+button,a,input,select{transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a6a0e6;outline-offset:3px}
+dialog{border-radius:20px!important;box-shadow:0 22px 70px #25174135!important}
+@media(max-width:680px){.sp-logo{width:34px;height:34px}}
+</style><style>body{background:#f7f6fb}.panel,.card{border-radius:20px;box-shadow:0 9px 28px #2517410c}header{background:#251741;color:white}dialog,.modal{border-radius:22px}button:focus-visible,a:focus-visible{outline:3px solid #b9b0ed;outline-offset:2px}</style><style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+body{font-family:Cairo,Tahoma,sans-serif;background:radial-gradient(circle at 12% 20%,#4e347c 0,transparent 34%),linear-gradient(135deg,#201431,#2b1b49 60%,#1c1532)!important;color:#251741}
+main{width:min(100%,480px);padding:42px!important;border:1px solid #ffffff60!important;border-radius:26px!important;box-shadow:0 26px 90px #0c081a70!important}
+.brand{color:#251741!important;font-family:Cairo,Tahoma,sans-serif;font-size:25px!important}
+.logo{background:#251741!important;padding:8px!important;border-radius:14px!important;display:flex}
+.logo .sp-logo{width:44px;height:44px}
+h1{font-size:27px!important;color:#251741}
+p,.small{color:#81748f!important}
+input{border-color:#e6dff0!important;background:#faf9fd!important;border-radius:13px!important}
+input:focus{outline:2px solid #b5a5ed!important;border-color:#5842a8!important}
+button#submit{background:#5842a8!important;color:white!important;border-radius:13px!important;font:800 15px Cairo,Tahoma,sans-serif!important}
+button#submit:hover{background:#38236e!important}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 90% 85%,#d2ec6d18,transparent 35%)}
+</style><link rel="stylesheet" href="/assets/app-shell.css"></head><body class="sp-login"><main>
+<div class="brand"><span class="logo"><img class="sp-logo" src="/assets/shipping-pulse-logo.svg" alt="" width="38" height="38"></span><span>Shipping Pulse</span></div>
+<h1>تسجيل الدخول</h1><p>ادخل بيانات حسابك للوصول إلى نظام الشحن والتحصيل.</p>
+<form id="login"><label for="email">البريد الإلكتروني</label><input id="email" name="email" type="email" autocomplete="username" required maxlength="254">
+<label for="password">كلمة المرور</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+<button id="submit" type="submit">تسجيل الدخول</button><div class="message" id="message" role="status" aria-live="polite"></div></form>
+<div class="small">نسخة اختبار — لا تستخدم بيانات الشحن الحقيقية حاليًا</div>
+</main><script>
+const form=document.getElementById('login'),msg=document.getElementById('message'),btn=document.getElementById('submit');
+form.addEventListener('submit',async e=>{e.preventDefault();btn.disabled=true;msg.textContent='جارٍ التحقق...';msg.className='message';
+try{const response=await fetch('/api/auth/login',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({email:form.email.value,password:form.password.value})});
+const result=await response.json();if(!response.ok){msg.textContent=response.status===429?'محاولات كثيرة. حاول بعد 15 دقيقة.':response.status===503?'الخدمة غير مهيأة بعد. تواصل مع المسؤول.':'البريد الإلكتروني أو كلمة المرور غير صحيحة.';return}
+form.password.value='';
+let check,session;
+for(let attempt=0;attempt<3;attempt++){
+ check=await fetch('/api/auth/me',{credentials:'same-origin',cache:'no-store'});
+ session=await check.json();
+ if(check.ok&&session.authenticated)break;
+ if(check.status!==401)break;
+ if(attempt<2)await new Promise(resolve=>setTimeout(resolve,350*(attempt+1)));
+}
+if(!check.ok||!session.authenticated){
+ msg.className='message';
+ msg.textContent=check.status===503?'تعذر قراءة الجلسة من الخادم (503). حاول مجددًا بعد قليل.':session.diagnostic?.sessionCookiePresent?'جلسة الدخول وصلت للخادم لكن تعذر التحقق منها (401).':'ملف جلسة الدخول لم يصل للخادم (401). جرّب السماح بملفات تعريف الارتباط لهذا الموقع.';
+ return;
+}msg.className='message ok';msg.textContent='تم تسجيل الدخول بنجاح. جارٍ فتح صفحتك...';window.location.replace(session.user?.role==='driver'?'/driver.html':'/home.html');
+}catch{msg.textContent='تعذر الاتصال بالخادم. حاول مرة أخرى.'}finally{btn.disabled=false}});
+</script></body></html>
