@@ -89,7 +89,7 @@ async function changeStatus(order,status,btn){
   const data=await res.json();
   if(!res.ok)throw Error(data.error||'تعذر حفظ الحالة');
   order._effectiveStatus=status;render();await notice('تم تحديث الحالة','تم حفظ الحالة في قاعدة بيانات Preview.');
- }catch(e){alert('لم يتم الحفظ: '+e.message)}finally{btn.disabled=false}
+ }catch(e){await notice('تعذر حفظ الحالة',e.message)}finally{btn.disabled=false}
 }
 async function load(){
  $('reload').disabled=true;$('message').textContent='جارٍ تحميل الشحنات...';
