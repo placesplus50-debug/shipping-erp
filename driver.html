@@ -13,9 +13,22 @@ button,a,input,select{transition:background-color .15s ease,border-color .15s ea
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a6a0e6;outline-offset:3px}
 dialog{border-radius:20px!important;box-shadow:0 22px 70px #25174135!important}
 @media(max-width:680px){.sp-logo{width:34px;height:34px}}
+</style><style>
+body{background:linear-gradient(180deg,#f0edf9,#f8f7fc 320px);color:#251741}
+header{background:linear-gradient(110deg,#201534,#322255);box-shadow:0 6px 28px #25174120}
+main{max-width:1050px}.heading{padding:10px 0}.heading h1{font-size:28px}
+.stat,.card{border-radius:20px;border-color:#eae6f2;box-shadow:0 10px 28px #25174109}
+.stat{position:relative;overflow:hidden}.stat:before{content:"";position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:#7560bf}
+.stat strong{color:#2e1e4b}
+.card{transition:transform .18s ease,box-shadow .18s ease}.card:hover{box-shadow:0 12px 32px #25174115;transform:translateY(-2px)}
+.status{background:#eee8fc;color:#5842a8}.notice{background:#eeeaf7;color:#6a568c}
+button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visible{outline:3px solid #b9b0ed;outline-offset:2px}
+.toolbar input,.toolbar select{background:#fff;box-shadow:0 4px 16px #25174106}
+.mobile-tabs{display:none}
+@media(max-width:650px){main{padding:17px 12px 90px}.stats{gap:9px}.stat{padding:15px}.card{padding:16px}.details{gap:12px}.mobile-tabs{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;justify-content:space-around;background:#fff;border-top:1px solid #e9e3f2;padding:12px 5px max(12px,env(safe-area-inset-bottom));box-shadow:0 -8px 28px #25174110}.mobile-tabs a{text-decoration:none;color:#716585;font-weight:700;font-size:12px}.mobile-tabs .selected{color:#5842a8}}
 </style></head><body>
 <header><div><b><img class="sp-logo" src="/assets/shipping-pulse-logo.svg" alt="" width="38" height="38"> Shipping Pulse</b><br><small id="who">لوحة المندوب</small></div><span class="tag">Preview</span></header>
-<main><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
+<main><nav class="mobile-tabs" aria-label="التنقل"><a class="selected" href="/driver.html">◫ شحناتي</a><a href="/home.html">◈ الرئيسية</a><a href="/login.html">♙ الحساب</a></nav><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
 <div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي غير المسجل للتحصيل</small><strong id="cod">—</strong></div></div>
 <div class="notice">مرحلة اختبار: البيانات تُقرأ مباشرة من Google Sheets. تغيير حالة الشحنة وتسجيل التحصيل محفوظان في Preview فقط، دون تعديل Google Sheets.</div>
 <div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
