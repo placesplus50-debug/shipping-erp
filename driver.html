@@ -16,20 +16,34 @@ function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0
 function node(tag,cls,txt){const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el}
 function render(){
  const q=$('search').value.trim().toLowerCase(),f=$('filter').value;
- const visible=orders.filter(o=>(!f||o['Shipping Status']===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
+ const visible=orders.filter(o=>(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
  const root=$('orders');root.replaceChildren();
  if(!visible.length){root.append(node('div','empty','لا توجد شحنات مطابقة'));return}
  for(const o of visible){
  const c=node('article','card'),top=node('div','cardtop'),left=node('div');
  left.append(node('h2','',o['Order ID']||'—'),node('div','note',o.Customer||'—'));
- top.append(left,node('span','status',o['Shipping Status']||'غير محدد'));c.append(top);
+ top.append(left,node('span','status',o._effectiveStatus||o['Shipping Status']||'غير محدد'));c.append(top);
  const details=node('div','details');
  details.append(node('span','', '📍 '+(o['City / Area']||'—')),node('span','', '💳 '+(o['Payment Type']||'—')),node('span','', 'حالة الدفع: '+(o['Payment Status']||'—')));
  c.append(details);
  const amount=node('div','money','المتبقي للتحصيل: '+fmt(o['COD Due'])+' ج.م');c.append(amount);
  if(o.Notes)c.append(node('div','note','ملاحظات: '+o.Notes));
+ const current=o._effectiveStatus||o['Shipping Status'];
+ const next={'Assigned':['Out for delivery','Delivery failed'],'Out for delivery':['Delivered','Returned','Delivery failed'],'Delivery failed':['Out for delivery','Returned']}[current]||[];
+ if(next.length){const actions=node('div','details');for(const st of next){const btn=node('button','', 'تغيير إلى '+st);btn.addEventListener('click',()=>changeStatus(o,st,btn));actions.append(btn)}c.append(actions)}
  root.append(c)
  }
+}
+async function changeStatus(order,status,btn){
+ if(!confirm('تأكيد تغيير حالة '+order['Order ID']+' إلى '+status+'؟'))return;
+ btn.disabled=true;
+ try{
+  const bytes=crypto.getRandomValues(new Uint8Array(16));const requestId='status_'+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+  const res=await fetch('/api/driver-status',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({orderId:order['Order ID'],status,requestId})});
+  const data=await res.json();
+  if(!res.ok)throw Error(data.error||'تعذر حفظ الحالة');
+  order._effectiveStatus=status;render();alert('تم تسجيل الحالة في قاعدة بيانات Preview فقط');
+ }catch(e){alert('لم يتم الحفظ: '+e.message)}finally{btn.disabled=false}
 }
 async function load(){
  $('reload').disabled=true;$('message').textContent='جارٍ تحميل الشحنات...';
