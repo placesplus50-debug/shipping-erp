@@ -67,7 +67,8 @@ export async function onRequestPut({request,env}){
  if(entry.decision!=="approved"||entry.method!=="cash"||entry.holder!=="driver")return reply({error:"Only approved driver-held cash may be handed over"},409);
  const exists=await env.DB.prepare("SELECT id FROM cash_handover WHERE collection_id=?").bind(id).first();
  if(exists)return reply({error:"Already handed over"},409);
- await env.DB.prepare("INSERT INTO cash_handover(collection_id,reviewer_user_id,amount_cents,destination,note) VALUES(?,?,?,?,?)").bind(id,actor.id,entry.amount_cents,destination,note).run();
+ const inserted=await env.DB.prepare("INSERT INTO cash_handover(collection_id,reviewer_user_id,amount_cents,destination,note) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM cash_handover WHERE collection_id=?)").bind(id,actor.id,entry.amount_cents,destination,note,id).run();
+ if(!inserted.meta?.changes)return reply({error:"Already handed over"},409);
  return reply({ok:true,collectionId:id,handedOverCents:entry.amount_cents,destination,googleSheetsModified:false},201);
  }catch{return safeError()}
 }
