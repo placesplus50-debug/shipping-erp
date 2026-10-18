@@ -29,7 +29,10 @@ export async function onRequestPost({request,env}){
   if(!transitions[previous]?.includes(status))return reply({error:"Invalid status transition"},409);
   const existing=await env.DB.prepare("SELECT order_id,new_status FROM driver_status_events WHERE request_id=?").bind(requestId).first();
   if(existing)return reply({error:"Duplicate request"},409);
-  const inserted=await env.DB.prepare("INSERT INTO driver_status_events (order_id,driver_id,actor_user_id,previous_status,new_status,request_id) SELECT ?,?,?,?,?,? WHERE COALESCE((SELECT new_status FROM driver_status_events WHERE order_id=? ORDER BY id DESC LIMIT 1),?)=?").bind(orderId,actor.driver_id,actor.id,previous,status,requestId,orderId,order["Shipping Status"],previous).run();
+  const eventInsert=env.DB.prepare("INSERT INTO driver_status_events (order_id,driver_id,actor_user_id,previous_status,new_status,request_id) SELECT ?,?,?,?,?,? WHERE COALESCE((SELECT new_status FROM driver_status_events WHERE order_id=? ORDER BY id DESC LIMIT 1),?)=?").bind(orderId,actor.driver_id,actor.id,previous,status,requestId,orderId,order["Shipping Status"],previous);
+  // Atomic transaction: status event and its durable Sheets outbox item either both commit or neither does.
+  const queued=env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) SELECT 'driver_status',id,'TRACKING',json_object('eventId','STATUS-'||id,'orderId',order_id,'driverId',driver_id,'oldStatus',previous_status,'newStatus',new_status,'eventTime',created_at,'recordedBy',actor_user_id) FROM driver_status_events WHERE request_id=?").bind(requestId);
+  const [inserted]=await env.DB.batch([eventInsert,queued]);
   if(!inserted.meta?.changes)return reply({error:"Shipment status changed; refresh and retry"},409);
   return reply({ok:true,orderId,previousStatus:previous,status,storage:"preview_d1",googleSheetsModified:false},201);
  }catch(e){return safeError()}
