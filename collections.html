@@ -145,4 +145,4 @@ el('reload').onclick=load;el('search').oninput=render;el('export').onclick=()=>{
  const csv='\uFEFF'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='shipping-collections-preview.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
 };load();
-</script><script>document.getElementById("spBack").addEventListener("click",()=>{if(history.length>1&&document.referrer.startsWith(location.origin))history.back();else location.assign("/home.html")});</script></body></html>
+</script><script>document.getElementById("spBack")?.addEventListener("click",()=>{if(history.length>1&&document.referrer.startsWith(location.origin))history.back();else location.assign("/home.html")});</script></body></html>
