@@ -20,7 +20,7 @@ assert.ok(collections.includes('href="/home.html"'),'collections must have home 
 const middleware=readFileSync('functions/_middleware.js','utf8');
 assert.ok(middleware.includes('staffPages'),'orders and drivers must be protected');
 assert.ok(middleware.includes('"/home.html"'),'staff home redirect required');
-assert.ok(middleware.includes('if(homePage&&!["super_admin","admin","accountant"].includes(user.role))'),'home must be role-protected');
+assert.ok(middleware.includes('if((homePage||staffPages)&&!["super_admin","admin","accountant"].includes(user.role))'),'home must be role-protected');
 const dispatcher=readFileSync('functions/api/sync-dispatch.js','utf8');
 assert.ok(dispatcher.includes('env.SHEETS_SYNC_ENABLED!=="true"'),'Sheets writes must remain gated');
 assert.ok(dispatcher.includes("synced_at=CURRENT_TIMESTAMP WHERE id=? AND state!='sent'"),'dispatch must atomically lease rows');
