@@ -4,9 +4,10 @@ import {currentUser,reply,safeError} from "./api/auth/_utils.js";
 export async function onRequest({request,env,next}) {
   const url=new URL(request.url);
   const legacy=url.pathname==="/"||url.pathname==="/index.html";
+  const homePage=url.pathname==="/home.html";
   const driverPage=url.pathname==="/driver.html";
   const collectionsPage=url.pathname==="/collections.html";
-  if(!legacy&&!driverPage&&!collectionsPage)return next();
+  if(!legacy&&!homePage&&!driverPage&&!collectionsPage)return next();
   if(!env.DB)return safeError();
   try {
     const user=await currentUser(request,env);
