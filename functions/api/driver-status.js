@@ -2,7 +2,7 @@ import {dispatchPending} from "./sync-dispatch.js";
 import {reply,currentUser,sameOrigin,safeError} from "./auth/_utils.js";
 const ALLOWED=new Set(["Assigned","Out for delivery","Delivered","Returned","Delivery failed"]);
 const validId=s=>typeof s==="string"&&/^ORD-[A-Za-z0-9-]{1,50}$/.test(s);
-export async function onRequestPost({request,env,context}){
+export async function onRequestPost({request,env,waitUntil}){
  if(!env.DB)return safeError();
  try{
   const actor=await currentUser(request,env);
@@ -35,7 +35,7 @@ export async function onRequestPost({request,env,context}){
   const queued=env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) SELECT 'driver_status',id,'TRACKING',json_object('eventId','STATUS-'||id,'orderId',order_id,'driverId',driver_id,'oldStatus',previous_status,'newStatus',new_status,'eventTime',created_at,'recordedBy',actor_user_id) FROM driver_status_events WHERE request_id=?").bind(requestId);
   const [inserted]=await env.DB.batch([eventInsert,queued]);
   if(!inserted.meta?.changes)return reply({error:"Shipment status changed; refresh and retry"},409);
-  if(env.SHEETS_SYNC_ENABLED==="true"&&context?.waitUntil)context.waitUntil(dispatchPending(env).catch(()=>{}));
+  if(env.SHEETS_SYNC_ENABLED==="true"&&typeof waitUntil==='function')waitUntil(dispatchPending(env).catch(()=>{}));
   return reply({ok:true,orderId,previousStatus:previous,status,storage:"preview_d1",googleSheetsModified:false},201);
  }catch(e){return safeError()}
 }
