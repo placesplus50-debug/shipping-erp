@@ -54,3 +54,7 @@ const remaining=runInNewContext('('+match[0]+')',{claims});
 assert.equal(remaining({'Order ID':'ORD-1006','COD Due':'1,750'}),0);
 assert.equal(remaining({'Order ID':'ORD-1007','COD Due':'900'}),900);
 console.log('Preview static syntax, authorization guard, and COD balance checks passed.');
+
+for(const page of ['home.html','orders.html','drivers.html','collections.html','users.html','driver.html']){const html=readFileSync(page,'utf8');assert.ok(html.includes('id="spBack"'),'missing back button '+page);assert.ok(html.includes('class="sp-global-nav"'),'missing internal navigation '+page)}
+assert.ok(readFileSync('driver.html','utf8').includes('id="spLogout"'),'driver logout missing');
+assert.ok(readFileSync('login.html','utf8').includes('linear-gradient(135deg,#201431'),'login brand theme missing');
