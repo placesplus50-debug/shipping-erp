@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 function walk(dir){
  return readdirSync(dir,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(join(dir,entry.name)):entry.name.endsWith('.js')?[join(dir,entry.name)]:[]);
 }
-for(const path of walk('functions'))new Script(readFileSync(path,'utf8'),{filename:path,importModuleDynamically:()=>{}});
+for(const path of walk('functions'))new Script(readFileSync(path,'utf8').replace(/^import .*$/gm,'').replace(/^export /gm,''),{filename:path});
 for(const path of ['driver.html','collections.html','login.html']){
  const html=readFileSync(path,'utf8');
  const scripts=[...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(m=>m[1]);
