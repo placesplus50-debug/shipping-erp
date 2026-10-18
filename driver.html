@@ -25,7 +25,7 @@ function render(){
  left.append(node('h2','',o['Order ID']||'—'),node('div','note',o.Customer||'—'));
  top.append(left,node('span','status',o._effectiveStatus||o['Shipping Status']||'غير محدد'));c.append(top);
  const details=node('div','details');
- details.append(node('span','', '📍 '+(o['City / Area']||'—')),node('span','', '💳 '+(o['Payment Type']||'—')),node('span','', 'حالة الدفع: '+(o['Payment Status']||'—')));
+ details.append(node('span','', '📍 '+(o['City / Area']||'—')),node('span','', '💳 '+(o['Payment Type']||'—')),node('span','', 'حالة الدفع: '+(claims.some(c=>c.order_id===o['Order ID']&&c.decision==='approved')?(remaining(o)===0?'التحصيل معتمد بالكامل':'تحصيل معتمد جزئيًا'):claims.some(c=>c.order_id===o['Order ID']&&!c.decision)?'تحصيل بانتظار المراجعة':(o['Payment Status']||'—'))));
  c.append(details);
  const finalReturn=(o._effectiveStatus||o['Shipping Status'])==='Returned';
  const amount=node('div','money',finalReturn?'مرتجع — لا يوجد تحصيل مطلوب':(o._effectiveStatus==='Delivery failed'?'تعذر التسليم — لا تحصيل حتى إعادة التسليم':'المتبقي غير المسجل: '+fmt(remaining(o))+' ج.م'));c.append(amount);
