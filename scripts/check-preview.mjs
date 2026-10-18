@@ -9,7 +9,7 @@ function walk(dir){
 for(const path of walk('functions'))new Script(readFileSync(path,'utf8').replace(/^import .*$/gm,'').replace(/^export /gm,''),{filename:path});
 for(const path of ['driver.html','collections.html','login.html']){
  const html=readFileSync(path,'utf8');
- const scripts=[...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(m=>m[1]);
+ const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
  assert.ok(scripts.length,path+' must have inline scripts');
  for(const script of scripts)new Script(script,{filename:path});
 }
@@ -21,7 +21,7 @@ assert.ok(api.includes('sameOrigin(request)'),'mutations must enforce same origi
 assert.ok(api.includes('actor.role!=="driver"'),'collections must restrict drivers');
 assert.ok(api.includes('["super_admin","accountant","admin"].includes(actor.role)'),'reviews and handovers must restrict staff');
 assert.ok(status.includes('WHERE COALESCE((SELECT new_status'),'status update must be guarded');
-const match=driver.match(/function remaining\\(o\\)\\{[^\\n]*\\}/);
+const match=driver.match(/function remaining\(o\)\{[^\n]*\}/);
 assert.ok(match,'remaining balance calculation missing');
 const claims=[{order_id:'ORD-1006',amount_cents:175000,decision:'approved'},{order_id:'ORD-1006',amount_cents:50000,decision:'rejected'}];
 const remaining=runInNewContext('('+match[0]+')',{claims});
