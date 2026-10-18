@@ -4,8 +4,8 @@ const fmt=c=>new Intl.NumberFormat('ar-EG',{minimumFractionDigits:2,maximumFract
 function render(){
  const q=el('search').value.trim().toLowerCase(),root=el('list');root.replaceChildren();
  const totals={pending:0,approved:0,rejected:0};
- for(const r of rows)totals[r.decision||'pending']+=r.amount_cents;
- el('summary').textContent='تحت المراجعة: '+fmt(totals.pending)+' ج.م | معتمد: '+fmt(totals.approved)+' ج.م | مرفوض: '+fmt(totals.rejected)+' ج.م';
+ let driverCash=0,handedOver=0;for(const r of rows){totals[r.decision||'pending']+=r.amount_cents;if(r.decision==='approved'&&r.method==='cash'&&r.holder==='driver'){if(r.handover_id)handedOver+=r.amount_cents;else driverCash+=r.amount_cents;}}
+ el('summary').textContent='تحت المراجعة: '+fmt(totals.pending)+' ج.م | معتمد: '+fmt(totals.approved)+' ج.م | مرفوض: '+fmt(totals.rejected)+' ج.م | في عهدة المناديب: '+fmt(driverCash)+' ج.م | تم توريده: '+fmt(handedOver)+' ج.م';
  const groups={};for(const r of rows){const k=(r.driver_id||'بدون مندوب')+' • '+(r.method||'غير محدد');if(!groups[k])groups[k]={pending:0,approved:0,rejected:0};groups[k][r.decision||'pending']+=r.amount_cents;}
  const target=el('groups');target.replaceChildren();const table=document.createElement('table');table.style.width='100%';table.style.borderCollapse='collapse';table.innerHTML='<thead><tr><th style="text-align:right;padding:10px">المندوب • الطريقة</th><th style="text-align:right;padding:10px">قيد المراجعة</th><th style="text-align:right;padding:10px">معتمد</th><th style="text-align:right;padding:10px">مرفوض</th></tr></thead>';const body=document.createElement('tbody');for(const [k,v] of Object.entries(groups)){const tr=document.createElement('tr');for(const val of [k,fmt(v.pending)+' ج.م',fmt(v.approved)+' ج.م',fmt(v.rejected)+' ج.م']){const td=document.createElement('td');td.style.padding='10px';td.style.borderTop='1px solid #eee';td.textContent=val;tr.append(td)}body.append(tr)}table.append(body);target.append(table);if(!Object.keys(groups).length)target.textContent='لا توجد تحصيلات مسجلة';
  for(const r of rows.filter(x=>(x.order_id+' '+x.driver_id).toLowerCase().includes(q))){
@@ -13,6 +13,7 @@ function render(){
  const title=document.createElement('h3');title.textContent=r.order_id+' — '+r.driver_id;card.append(title);
  const info=document.createElement('p');info.textContent='المبلغ: '+fmt(r.amount_cents)+' ج.م | الطريقة: '+r.method+' | الفلوس مع: '+r.holder+' | الحالة: '+(r.decision||'pending');card.append(info);
  const date=document.createElement('small');date.textContent=r.created_at;card.append(date);
+ if(r.decision==='approved'&&r.method==='cash'&&r.holder==='driver'&&!r.handover_id){const b=document.createElement('button');b.textContent='تأكيد استلام النقدية';b.onclick=()=>handover(r.id);card.append(b)}else if(r.handover_id){const tag=document.createElement('p');tag.textContent='تم توريد النقدية إلى '+r.handover_destination;card.append(tag)}
  if(!r.decision){const actions=document.createElement('div');actions.className='actions';for(const [label,decision] of [['اعتماد','approved'],['رفض','rejected']]){const b=document.createElement('button');b.textContent=label;b.onclick=()=>review(r.id,decision);actions.append(b)}card.append(actions)}
  root.append(card);
  }
@@ -25,6 +26,7 @@ async function load(){
  rows=data.collections;el('error').textContent='';render()
  }catch(e){el('error').textContent=e.message}
 }
+async function handover(id){const destination=prompt('مكان استلام النقدية: cashbox أو bank','cashbox');if(destination===null)return;if(!['cashbox','bank'].includes(destination)){alert('اختر cashbox أو bank');return}if(!confirm('هل استلمت النقدية فعليًا؟ هذا تأكيد توريد نهائي.'))return;const note=prompt('رقم إيصال التوريد أو ملاحظة','');if(note===null)return;const res=await fetch('/api/collections',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({id,destination,note})}),data=await res.json();if(!res.ok){alert(data.error||'فشل التوريد');return}load()}
 async function review(id,decision){if(!confirm('تأكيد '+decision+' للتحصيل رقم '+id+'؟'))return;
  const note=prompt('ملاحظات المراجعة (اختياري)','');if(note===null)return;
  const res=await fetch('/api/collections',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({id,decision,note})}),data=await res.json();
