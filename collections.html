@@ -38,35 +38,40 @@ async function review(id,decision){if(!confirm('تأكيد '+decision+' للتح
 }
 
 function statementRows(){
- const d=el('driverStatement').value;
- return rows.filter(r=>!d||r.driver_id===d).slice().sort((a,b)=>a.id-b.id);
+ const d=el('driverStatement').value,events=[];
+ for(const r of rows.filter(r=>!d||r.driver_id===d)){
+  if(r.decision==='approved'&&r.method==='cash'&&r.holder==='driver'){
+   events.push({date:r.reviewed_at||r.created_at,driver:r.driver_id,order:r.order_id,type:'تحصيل نقدي معتمد',inflow:r.amount_cents,outflow:0,reference:'COL-'+r.id,sort:0});
+   if(r.handover_id)events.push({date:r.handed_over_at||r.created_at,driver:r.driver_id,order:r.order_id,type:'توريد إلى '+r.handover_destination,inflow:0,outflow:r.handed_over_cents??r.amount_cents,reference:'HAND-'+r.handover_id,sort:1});
+  }
+ }
+ return events.sort((a,b)=>String(a.date).localeCompare(String(b.date))||a.sort-b.sort||a.reference.localeCompare(b.reference));
 }
-function statementValues(r){
- const cash=r.method==='cash'&&r.holder==='driver'&&r.decision==='approved';
- return {inflow:cash?r.amount_cents:0,outflow:cash&&r.handover_id?r.handed_over_cents||r.amount_cents:0};
+function statementLedger(){
+ const balances=new Map();
+ return statementRows().map(e=>{const balance=(balances.get(e.driver)||0)+e.inflow-e.outflow;balances.set(e.driver,balance);return {...e,balance}});
 }
 function renderStatement(){
- const root=el('statement');root.replaceChildren();
- const data=statementRows();let balance=0;const balances=new Map();
+ const root=el('statement');root.replaceChildren();const data=statementLedger();
  const table=document.createElement('table');table.style.width='100%';table.style.borderCollapse='collapse';
- const headers=['التاريخ','المندوب','الشحنة','الحركة','تحصيل نقدي معتمد','توريد فعلي','الرصيد المتبقي'];
+ const headers=['تاريخ الحركة','المندوب','الشحنة','الحركة','مرجع','تحصيل معتمد','توريد','رصيد عهدة المندوب'];
  const thead=document.createElement('thead'),tr=document.createElement('tr');
  for(const h of headers){const th=document.createElement('th');th.textContent=h;th.style.padding='9px';th.style.textAlign='right';tr.append(th)}thead.append(tr);table.append(thead);
  const body=document.createElement('tbody');
- for(const r of data){
-  const v=statementValues(r);balance+=v.inflow-v.outflow;balances.set(r.driver_id,(balances.get(r.driver_id)||0)+v.inflow-v.outflow);
-  const row=document.createElement('tr'),cells=[r.created_at,r.driver_id,r.order_id,r.decision||'قيد المراجعة',fmt(v.inflow),fmt(v.outflow),fmt(balances.get(r.driver_id))];
-  for(const val of cells){const td=document.createElement('td');td.textContent=val;td.style.padding='9px';td.style.borderTop='1px solid #eee';row.append(td)}body.append(row);
+ for(const e of data){const row=document.createElement('tr');
+  for(const val of [e.date,e.driver,e.order,e.type,e.reference,fmt(e.inflow),fmt(e.outflow),fmt(e.balance)]){
+   const td=document.createElement('td');td.textContent=val;td.style.padding='9px';td.style.borderTop='1px solid #eee';row.append(td);
+  }body.append(row);
  }
- table.append(body);root.append(table);
- const summary=document.createElement('p');summary.textContent='رصيد العهدة النقدية المعتمدة غير الموردة: '+fmt(balance)+' ج.م';root.prepend(summary);
- if(!data.length)root.textContent='لا توجد تحصيلات لهذا المندوب';
+ table.append(body);
+ if(!data.length){root.textContent='لا توجد حركات عهدة نقدية معتمدة لهذا المندوب';return}
+ const totals=new Map();for(const e of data)totals.set(e.driver,e.balance);
+ const summary=document.createElement('p');summary.textContent='إجمالي العهدة النقدية غير الموردة: '+fmt([...totals.values()].reduce((a,b)=>a+b,0))+' ج.م';root.append(summary,table);
 }
 function exportStatement(){
- const d=el('driverStatement').value;const balances=new Map();
- const lines=[['Created','Driver','Order','Collection status','Cash approved EGP','Cash handed over EGP','Running cash balance EGP','Handover destination','Handover time']];
- for(const r of statementRows()){const v=statementValues(r);balances.set(r.driver_id,(balances.get(r.driver_id)||0)+v.inflow-v.outflow);lines.push([r.created_at,r.driver_id,r.order_id,r.decision||'pending',(v.inflow/100).toFixed(2),(v.outflow/100).toFixed(2),(balances.get(r.driver_id)/100).toFixed(2),r.handover_destination||'',r.handed_over_at||''])}
- const csv='\uFEFF'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ const d=el('driverStatement').value;
+ const lines=[['Event time','Driver','Order','Movement','Reference','Approved cash EGP','Cash handed over EGP','Driver cash balance EGP'],...statementLedger().map(e=>[e.date,e.driver,e.order,e.type,e.reference,(e.inflow/100).toFixed(2),(e.outflow/100).toFixed(2),(e.balance/100).toFixed(2)])];
+ const csv='\\uFEFF'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\\r\\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='driver-statement-'+(d||'all')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 el('driverStatement').addEventListener('change',renderStatement);
