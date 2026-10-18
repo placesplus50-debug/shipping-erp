@@ -57,10 +57,10 @@ async function load(){
  if(res.status===401){location.href='/login.html';return}
  const data=await res.json();if(!res.ok)throw Error(data.error||'تعذر تحميل الشحنات');
  if(data.scope!=='assigned_driver'||!Array.isArray(data.orders))throw Error('تعذر التحقق من نطاق شحنات المندوب');
- orders=data.orders;
+ orders=data.orders.map(o=>({...o,_effectiveStatus:o['Effective Shipping Status']||o['Shipping Status']}));
  $('count').textContent=fmt(orders.length);
  $('cod').textContent=fmt(orders.reduce((s,o)=>s+(Number(String(o['COD Due']||0).replace(/,/g,''))||0),0))+' ج.م';
- const selected=$('filter').value;const states=[...new Set(orders.map(o=>o['Shipping Status']).filter(Boolean))];
+ const selected=$('filter').value;const states=[...new Set(orders.map(o=>o._effectiveStatus||o['Shipping Status']).filter(Boolean))];
  $('filter').replaceChildren(new Option('كل الحالات',''),...states.map(s=>new Option(s,s)));$('filter').value=states.includes(selected)?selected:'';
  $('message').textContent='';render();
  }catch(e){$('message').textContent=e.message;$('message').className='error';$('orders').replaceChildren()}finally{$('reload').disabled=false}
