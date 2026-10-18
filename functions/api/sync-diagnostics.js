@@ -33,7 +33,12 @@ export async function onRequestGet({request,env}){
    const found=await env.DB.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN state='sent' THEN 1 ELSE 0 END) AS sent,SUM(CASE WHEN state!='sent' THEN 1 ELSE 0 END) AS pending FROM sheet_sync_outbox").first();
    outbox={available:true,total:found?.total||0,sent:found?.sent||0,pending:found?.pending||0};
   }catch{}
-  return reply({mode:"read_only_diagnostic",googleSheetsModified:false,spreadsheetId,tabs,outbox,googleWriteScope,writeSyncEnabled:env.SHEETS_SYNC_ENABLED==="true"});
+  let recentSync=[];
+  try{
+   const rows=await env.DB.prepare("SELECT id,event_type,destination_tab,state,attempts,last_error,synced_at FROM sheet_sync_outbox ORDER BY id DESC LIMIT 10").all();
+   recentSync=(rows.results||[]).map(r=>({id:r.id,eventType:r.event_type,tab:r.destination_tab,state:r.state,attempts:r.attempts,error:r.last_error||null,lastAttempt:r.synced_at||null}));
+  }catch{}
+  return reply({mode:"read_only_diagnostic",googleSheetsModified:false,spreadsheetId,tabs,outbox,recentSync,googleWriteScope,writeSyncEnabled:env.SHEETS_SYNC_ENABLED==="true"});
  }catch{return safeError()}
 }
 export const onRequestPost=()=>reply({error:"Read-only diagnostic"},405);
