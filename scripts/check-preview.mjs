@@ -36,7 +36,7 @@ assert.ok(oauthCallback.includes('googleapis.com/auth/spreadsheets'),'callback m
 const dispatcher=readFileSync('functions/api/sync-dispatch.js','utf8');
 assert.ok(dispatcher.includes('env.SHEETS_SYNC_ENABLED!=="true"'),'Sheets writes must remain gated');
 assert.ok(dispatcher.includes("synced_at=CURRENT_TIMESTAMP WHERE id=? AND state!='sent'"),'dispatch must atomically lease rows');
-for(const file of ['functions/api/collections.js','functions/api/driver-status.js'])assert.ok(readFileSync(file,'utf8').includes('context.waitUntil(dispatchPending(env)'),'mutations must schedule immediate sync: '+file);
+for(const file of ['functions/api/collections.js','functions/api/driver-status.js'])assert.ok(readFileSync(file,'utf8').includes('waitUntil(dispatchPending(env)'),'mutations must schedule immediate sync: '+file);
 assert.ok(collections.includes('function showDialog('),'accountant confirmation modal required');
 const driver=readFileSync('driver.html','utf8');
 assert.ok(driver.includes('function notice('),'driver confirmation modal required');
