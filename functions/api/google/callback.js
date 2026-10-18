@@ -29,5 +29,5 @@ export async function onRequestGet({request,env}){
   const payload=b64(iv)+"."+b64(encrypted);
   try{await env.DB.prepare("INSERT INTO google_oauth_tokens(id,refresh_token_ciphertext,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET refresh_token_ciphertext=excluded.refresh_token_ciphertext,updated_at=CURRENT_TIMESTAMP").bind(payload).run()}catch{return reply({error:"Google token database write failed",code:"TOKEN_DATABASE_WRITE_FAILED"},503)}
   return reply({connected:true,message:"Google Sheets read-write authorization saved; sync still disabled until verified"});
- }catch{return reply({error:"Token storage unavailable; run preview migrations and check encryption key"},503)}
+ }catch{return reply({error:"Token encryption failed",code:"TOKEN_ENCRYPTION"},503)}
 }
