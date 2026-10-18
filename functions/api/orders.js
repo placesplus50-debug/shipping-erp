@@ -10,7 +10,7 @@ export const onRequestPatch=noWrite;
 export const onRequestPut=noWrite;
 export const onRequestDelete=noWrite;
 
-async function getAccessToken(env){
+export async function getAccessToken(env){
  const record=await env.DB.prepare("SELECT refresh_token_ciphertext FROM google_oauth_tokens WHERE id=1").first();
  if(!record?.refresh_token_ciphertext)throw Error("not_connected");
  const [ivB64,dataB64]=record.refresh_token_ciphertext.split(".");
