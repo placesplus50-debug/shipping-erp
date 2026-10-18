@@ -24,7 +24,7 @@ export async function onRequestGet({request,env}){
    const check=await fetch("https://oauth2.googleapis.com/tokeninfo?access_token="+encodeURIComponent(token),{headers:{accept:"application/json"}});
    if(check.ok){
     const info=await check.json();
-    const scopes=String(info.scope||"").split(/\\s+/);
+    const scopes=String(info.scope||"").split(/\s+/);
     googleWriteScope=scopes.includes("https://www.googleapis.com/auth/spreadsheets")?"granted":scopes.includes("https://www.googleapis.com/auth/spreadsheets.readonly")?"read_only":"not_granted";
    }
   }catch{googleWriteScope="verification_unavailable"}
