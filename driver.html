@@ -28,10 +28,11 @@ function render(){
  c.append(details);
  const amount=node('div','money','المتبقي للتحصيل: '+fmt(o['COD Due'])+' ج.م');c.append(amount);
  if(o.Notes)c.append(node('div','note','ملاحظات: '+o.Notes));
+ const current=o._effectiveStatus||o['Shipping Status'];
  if(current==='Delivered'&&Number(String(o['COD Due']||0).replace(/,/g,''))>0){
   const button=node('button','','تسجيل تحصيل');button.addEventListener('click',()=>collect(o,button));c.append(button);
  }
- const current=o._effectiveStatus||o['Shipping Status'];
+
  const next={'Assigned':['Out for delivery','Delivery failed'],'Out for delivery':['Delivered','Returned','Delivery failed'],'Delivery failed':['Out for delivery','Returned']}[current]||[];
  if(next.length){const actions=node('div','details');for(const st of next){const btn=node('button','', 'تغيير إلى '+st);btn.addEventListener('click',()=>changeStatus(o,st,btn));actions.append(btn)}c.append(actions)}
  root.append(c)
