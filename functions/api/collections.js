@@ -33,7 +33,9 @@ export async function onRequestPost({request,env}){
  if(existing)return reply({error:"Duplicate request"},409);
  const sum=await env.DB.prepare("SELECT COALESCE(SUM(e.amount_cents),0) AS total FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id WHERE e.order_id=? AND (r.decision IS NULL OR r.decision='approved')").bind(b.orderId).first();
  if(sum.total+b.amountCents>due)return reply({error:"Amount exceeds remaining COD"},409);
- const result=await env.DB.prepare("INSERT INTO collection_events(order_id,driver_id,actor_user_id,amount_cents,method,holder,request_id,note) SELECT ?,?,?,?,?,?,?,? WHERE ? >= ? + (SELECT COALESCE(SUM(e.amount_cents),0) FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id WHERE e.order_id=? AND (r.decision IS NULL OR r.decision='approved'))").bind(b.orderId,actor.driver_id,actor.id,b.amountCents,b.method,b.holder,b.requestId,String(b.note||""),due,b.amountCents,b.orderId).run();
+ const insertCollection=env.DB.prepare("INSERT INTO collection_events(order_id,driver_id,actor_user_id,amount_cents,method,holder,request_id,note) SELECT ?,?,?,?,?,?,?,? WHERE ? >= ? + (SELECT COALESCE(SUM(e.amount_cents),0) FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id WHERE e.order_id=? AND (r.decision IS NULL OR r.decision='approved'))").bind(b.orderId,actor.driver_id,actor.id,b.amountCents,b.method,b.holder,b.requestId,String(b.note||""),due,b.amountCents,b.orderId);
+ const queueCollection=env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) SELECT 'collection',id,'COLLECTIONS',json_object('settlementId','COL-'||id,'orderId',order_id,'driverId',driver_id,'amountCents',amount_cents,'method',method,'holder',holder,'note',note) FROM collection_events WHERE request_id=?").bind(b.requestId);
+ const [result]=await env.DB.batch([insertCollection,queueCollection]);
  if(!result.meta?.changes)return reply({error:"COD already fully claimed"},409);
  return reply({ok:true,id:result.meta.last_row_id,review:"pending",googleSheetsModified:false},201);
  }catch{return safeError()}
@@ -48,7 +50,9 @@ export async function onRequestPatch({request,env}){
  if(!Number.isSafeInteger(id)||id<1||!["approved","rejected"].includes(b.decision)||String(b.note||"").length>500)return reply({error:"Invalid review"},400);
  const item=await env.DB.prepare("SELECT id FROM collection_events WHERE id=?").bind(id).first();if(!item)return reply({error:"Not found"},404);
  const existing=await env.DB.prepare("SELECT id FROM collection_reviews WHERE collection_id=?").bind(id).first();if(existing)return reply({error:"Already reviewed"},409);
- await env.DB.prepare("INSERT INTO collection_reviews(collection_id,reviewer_user_id,decision,note) VALUES(?,?,?,?)").bind(id,actor.id,b.decision,String(b.note||"")).run();
+ const insertReview=env.DB.prepare("INSERT INTO collection_reviews(collection_id,reviewer_user_id,decision,note) VALUES(?,?,?,?)").bind(id,actor.id,b.decision,String(b.note||""));
+ const queueReview=env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) SELECT 'review',r.id,'COLLECTIONS',json_object('settlementId','COL-'||r.collection_id,'decision',r.decision,'reviewedBy',r.reviewer_user_id,'note',r.note) FROM collection_reviews r WHERE r.collection_id=?").bind(id);
+ await env.DB.batch([insertReview,queueReview]);
  return reply({ok:true,decision:b.decision},201);
  }catch{return safeError()}
 }
@@ -67,7 +71,9 @@ export async function onRequestPut({request,env}){
  if(entry.decision!=="approved"||entry.method!=="cash"||entry.holder!=="driver")return reply({error:"Only approved driver-held cash may be handed over"},409);
  const exists=await env.DB.prepare("SELECT id FROM cash_handover WHERE collection_id=?").bind(id).first();
  if(exists)return reply({error:"Already handed over"},409);
- const inserted=await env.DB.prepare("INSERT INTO cash_handover(collection_id,reviewer_user_id,amount_cents,destination,note) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM cash_handover WHERE collection_id=?)").bind(id,actor.id,entry.amount_cents,destination,note,id).run();
+ const insertHandover=env.DB.prepare("INSERT INTO cash_handover(collection_id,reviewer_user_id,amount_cents,destination,note) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM cash_handover WHERE collection_id=?)").bind(id,actor.id,entry.amount_cents,destination,note,id);
+ const queueHandover=env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) SELECT 'handover',h.id,'COLLECTIONS',json_object('settlementId','COL-'||h.collection_id,'amountCents',h.amount_cents,'destination',h.destination,'reviewedBy',h.reviewer_user_id,'note',h.note,'remittanceDate',h.created_at) FROM cash_handover h WHERE h.collection_id=?").bind(id);
+ const [inserted]=await env.DB.batch([insertHandover,queueHandover]);
  if(!inserted.meta?.changes)return reply({error:"Already handed over"},409);
  return reply({ok:true,collectionId:id,handedOverCents:entry.amount_cents,destination,googleSheetsModified:false},201);
  }catch{return safeError()}
