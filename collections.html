@@ -47,15 +47,15 @@ function statementValues(r){
 }
 function renderStatement(){
  const root=el('statement');root.replaceChildren();
- const data=statementRows();let balance=0;
+ const data=statementRows();let balance=0;const balances=new Map();
  const table=document.createElement('table');table.style.width='100%';table.style.borderCollapse='collapse';
  const headers=['التاريخ','المندوب','الشحنة','الحركة','تحصيل نقدي معتمد','توريد فعلي','الرصيد المتبقي'];
  const thead=document.createElement('thead'),tr=document.createElement('tr');
  for(const h of headers){const th=document.createElement('th');th.textContent=h;th.style.padding='9px';th.style.textAlign='right';tr.append(th)}thead.append(tr);table.append(thead);
  const body=document.createElement('tbody');
  for(const r of data){
-  const v=statementValues(r);balance+=v.inflow-v.outflow;
-  const row=document.createElement('tr'),cells=[r.created_at,r.driver_id,r.order_id,r.decision||'قيد المراجعة',fmt(v.inflow),fmt(v.outflow),fmt(balance)];
+  const v=statementValues(r);balance+=v.inflow-v.outflow;balances.set(r.driver_id,(balances.get(r.driver_id)||0)+v.inflow-v.outflow);
+  const row=document.createElement('tr'),cells=[r.created_at,r.driver_id,r.order_id,r.decision||'قيد المراجعة',fmt(v.inflow),fmt(v.outflow),fmt(balances.get(r.driver_id))];
   for(const val of cells){const td=document.createElement('td');td.textContent=val;td.style.padding='9px';td.style.borderTop='1px solid #eee';row.append(td)}body.append(row);
  }
  table.append(body);root.append(table);
@@ -63,10 +63,10 @@ function renderStatement(){
  if(!data.length)root.textContent='لا توجد تحصيلات لهذا المندوب';
 }
 function exportStatement(){
- const d=el('driverStatement').value;let balance=0;
+ const d=el('driverStatement').value;const balances=new Map();
  const lines=[['Created','Driver','Order','Collection status','Cash approved EGP','Cash handed over EGP','Running cash balance EGP','Handover destination','Handover time']];
- for(const r of statementRows()){const v=statementValues(r);balance+=v.inflow-v.outflow;lines.push([r.created_at,r.driver_id,r.order_id,r.decision||'pending',(v.inflow/100).toFixed(2),(v.outflow/100).toFixed(2),(balance/100).toFixed(2),r.handover_destination||'',r.handed_over_at||''])}
- const csv='\\uFEFF'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\\r\\n');
+ for(const r of statementRows()){const v=statementValues(r);balances.set(r.driver_id,(balances.get(r.driver_id)||0)+v.inflow-v.outflow);lines.push([r.created_at,r.driver_id,r.order_id,r.decision||'pending',(v.inflow/100).toFixed(2),(v.outflow/100).toFixed(2),(balances.get(r.driver_id)/100).toFixed(2),r.handover_destination||'',r.handed_over_at||''])}
+ const csv='\uFEFF'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='driver-statement-'+(d||'all')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 el('driverStatement').addEventListener('change',renderStatement);
