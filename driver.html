@@ -28,11 +28,30 @@ function render(){
  c.append(details);
  const amount=node('div','money','المتبقي للتحصيل: '+fmt(o['COD Due'])+' ج.م');c.append(amount);
  if(o.Notes)c.append(node('div','note','ملاحظات: '+o.Notes));
+ if(current==='Delivered'&&Number(String(o['COD Due']||0).replace(/,/g,''))>0){
+  const button=node('button','','تسجيل تحصيل');button.addEventListener('click',()=>collect(o,button));c.append(button);
+ }
  const current=o._effectiveStatus||o['Shipping Status'];
  const next={'Assigned':['Out for delivery','Delivery failed'],'Out for delivery':['Delivered','Returned','Delivery failed'],'Delivery failed':['Out for delivery','Returned']}[current]||[];
  if(next.length){const actions=node('div','details');for(const st of next){const btn=node('button','', 'تغيير إلى '+st);btn.addEventListener('click',()=>changeStatus(o,st,btn));actions.append(btn)}c.append(actions)}
  root.append(c)
  }
+}
+async function collect(order,btn){
+ const due=Number(String(order['COD Due']||0).replace(/,/g,''));
+ const raw=prompt('المبلغ المحصل بالجنيه (الحد الأقصى '+due+')',String(due));if(raw===null)return;
+ const amount=Number(raw);if(!Number.isFinite(amount)||amount<=0||Math.round(amount*100)>Math.round(due*100)){alert('مبلغ غير صحيح');return}
+ const method=prompt('طريقة التحصيل: cash أو company_transfer أو paymob','cash');if(method===null)return;
+ if(!['cash','company_transfer','paymob'].includes(method)){alert('طريقة غير صحيحة');return}
+ const holder=method==='cash'?'driver':'company';
+ if(!confirm('تسجيل '+amount+' ج.م على '+order['Order ID']+'؟ الحالة: بانتظار مراجعة المحاسب'))return;
+ btn.disabled=true;
+ try{
+ const bytes=crypto.getRandomValues(new Uint8Array(16)),requestId='col_'+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+ const res=await fetch('/api/collections',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({orderId:order['Order ID'],amountCents:Math.round(amount*100),method,holder,requestId})});
+ const data=await res.json();if(!res.ok)throw Error(data.error||'تعذر التسجيل');
+ alert('تم تسجيل التحصيل للمراجعة، ولم يتم اعتماده بعد');
+ }catch(e){alert('لم يتم الحفظ: '+e.message)}finally{btn.disabled=false}
 }
 async function changeStatus(order,status,btn){
  if(!confirm('تأكيد تغيير حالة '+order['Order ID']+' إلى '+status+'؟'))return;
