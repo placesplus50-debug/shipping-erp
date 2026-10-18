@@ -19,7 +19,15 @@ export async function onRequestGet({request,env}){
   }
   // A successful Sheets read does not establish Sheets write authorization.
   // Do not access or decrypt refresh tokens for this read-only diagnostic.
-  const googleWriteScope="not_verified";
+  let googleWriteScope="not_verified";
+  try{
+   const check=await fetch("https://oauth2.googleapis.com/tokeninfo?access_token="+encodeURIComponent(token),{headers:{accept:"application/json"}});
+   if(check.ok){
+    const info=await check.json();
+    const scopes=String(info.scope||"").split(/\\s+/);
+    googleWriteScope=scopes.includes("https://www.googleapis.com/auth/spreadsheets")?"granted":scopes.includes("https://www.googleapis.com/auth/spreadsheets.readonly")?"read_only":"not_granted";
+   }
+  }catch{googleWriteScope="verification_unavailable"}
   let outbox="migration_required";
   try{
    const found=await env.DB.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN state='sent' THEN 1 ELSE 0 END) AS sent,SUM(CASE WHEN state!='sent' THEN 1 ELSE 0 END) AS pending FROM sheet_sync_outbox").first();
