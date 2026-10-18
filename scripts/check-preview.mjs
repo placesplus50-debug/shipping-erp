@@ -7,13 +7,18 @@ function walk(dir){
  return readdirSync(dir,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(join(dir,entry.name)):entry.name.endsWith('.js')?[join(dir,entry.name)]:[]);
 }
 for(const path of walk('functions'))new Script(readFileSync(path,'utf8').replace(/^import .*$/gm,'').replace(/^export /gm,''),{filename:path});
-for(const path of ['driver.html','collections.html','login.html','home.html']){
+for(const path of ['driver.html','collections.html','login.html','home.html','orders.html','drivers.html']){
  const html=readFileSync(path,'utf8');
  const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
  assert.ok(scripts.length,path+' must have inline scripts');
  for(const script of scripts)new Script(script,{filename:path});
 }
+const home=readFileSync('home.html','utf8');
+const collections=readFileSync('collections.html','utf8');
+assert.ok(home.includes('href="/orders.html"')&&home.includes('href="/drivers.html"'),'dashboard links must navigate');
+assert.ok(collections.includes('href="/home.html"'),'collections must have home navigation');
 const middleware=readFileSync('functions/_middleware.js','utf8');
+assert.ok(middleware.includes('staffPages'),'orders and drivers must be protected');
 assert.ok(middleware.includes('"/home.html"'),'staff home redirect required');
 assert.ok(middleware.includes('if(homePage&&!["super_admin","admin","accountant"].includes(user.role))'),'home must be role-protected');
 const dispatcher=readFileSync('functions/api/sync-dispatch.js','utf8');
