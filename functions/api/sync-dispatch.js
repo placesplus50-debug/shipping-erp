@@ -37,15 +37,18 @@ export async function deliver(env,token,item){
 export async function dispatchPending(env){
  if(env.SHEETS_SYNC_ENABLED!=="true")return {sent:0,failed:0,enabled:false};
  const token=await getAccessToken(env);
- const {results}=await env.DB.prepare("SELECT * FROM sheet_sync_outbox WHERE state!='sent' ORDER BY id LIMIT 10").all();
+ const {results}=await env.DB.prepare("SELECT * FROM sheet_sync_outbox WHERE state!='sent' AND (synced_at IS NULL OR synced_at < datetime('now','-2 minutes')) ORDER BY id LIMIT 10").all();
  let sent=0,failed=0;
  for(const item of results||[]){
+  // Claim an outbox row before calling Sheets, preventing concurrent dispatch.
+  const lease=await env.DB.prepare("UPDATE sheet_sync_outbox SET synced_at=CURRENT_TIMESTAMP WHERE id=? AND state!='sent' AND (synced_at IS NULL OR synced_at < datetime('now','-2 minutes'))").bind(item.id).run();
+  if(!lease.meta?.changes)continue;
   try{
    await deliver(env,token,item);
    await env.DB.prepare("UPDATE sheet_sync_outbox SET state='sent',attempts=attempts+1,last_error=NULL,synced_at=CURRENT_TIMESTAMP WHERE id=?").bind(item.id).run();
    sent++;
   }catch(e){
-   await env.DB.prepare("UPDATE sheet_sync_outbox SET state='error',attempts=attempts+1,last_error=? WHERE id=?").bind(String(e.message||"failed").slice(0,100),item.id).run();
+   await env.DB.prepare("UPDATE sheet_sync_outbox SET state='error',attempts=attempts+1,last_error=?,synced_at=NULL WHERE id=?").bind(String(e.message||"failed").slice(0,100),item.id).run();
    failed++;
   }
  }
