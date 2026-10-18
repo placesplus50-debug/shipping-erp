@@ -17,18 +17,9 @@ export async function onRequestGet({request,env}){
    const data=await response.json();
    tabs[tab]={headers:(data.values?.[0]||[]).map(v=>String(v).trim())};
   }
-  // Inspect granted OAuth scopes without attempting any write to Sheets.
-  let googleWriteScope="unknown";
-  try{
-   const row=await env.DB.prepare("SELECT refresh_token_ciphertext FROM google_oauth_tokens WHERE id=1").first();
-   if(row?.refresh_token_ciphertext){
-    const [iv,data]=row.refresh_token_ciphertext.split(".");
-    const bytes=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
-    const key=await crypto.subtle.importKey("raw",bytes(env.GOOGLE_TOKEN_ENCRYPTION_KEY),{name:"AES-GCM"},false,["decrypt"]);
-    // OAuth refresh token itself does not encode scopes; do not infer write permission.
-    googleWriteScope="not_verified";
-   }
-  }catch{googleWriteScope="unavailable"}
+  // A successful Sheets read does not establish Sheets write authorization.
+  // Do not access or decrypt refresh tokens for this read-only diagnostic.
+  const googleWriteScope="not_verified";
   let outbox="migration_required";
   try{
    const found=await env.DB.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN state='sent' THEN 1 ELSE 0 END) AS sent,SUM(CASE WHEN state!='sent' THEN 1 ELSE 0 END) AS pending FROM sheet_sync_outbox").first();
