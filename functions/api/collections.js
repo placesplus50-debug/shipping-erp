@@ -7,8 +7,8 @@ export async function onRequestGet({request,env}){
  if(!env.DB)return safeError();
  try{const actor=await currentUser(request,env);if(!actor)return reply({error:"Authentication required"},401);
  const orders=await scopedOrders(request,env),ids=new Set(orders.map(o=>o["Order ID"]));
- const {results}=await env.DB.prepare("SELECT e.id,e.order_id,e.driver_id,e.amount_cents,e.method,e.holder,e.note,e.created_at,r.decision,r.note AS review_note,r.created_at AS reviewed_at,h.id AS handover_id,h.amount_cents AS handed_over_cents,h.destination AS handover_destination,h.created_at AS handed_over_at FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id LEFT JOIN cash_handover h ON h.collection_id=e.id ORDER BY e.id DESC LIMIT 2000").all();
- return reply({collections:results.filter(e=>ids.has(e.order_id)&&(actor.role!=="driver"||e.driver_id===actor.driver_id)),readOnly:false,scope:actor.role==="driver"?"assigned_driver":"authorized_staff"});
+ const {results}=await env.DB.prepare("SELECT e.id,e.order_id,e.driver_id,e.amount_cents,e.method,e.holder,e.note,e.created_at,r.decision,r.note AS review_note,r.created_at AS reviewed_at,h.id AS handover_id,h.amount_cents AS handed_over_cents,h.destination AS handover_destination,h.note AS handover_note,h.reviewer_user_id AS handover_reviewer_user_id,r.reviewer_user_id AS review_user_id,h.created_at AS handed_over_at FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id LEFT JOIN cash_handover h ON h.collection_id=e.id ORDER BY e.id DESC LIMIT 2000").all();
+ return reply({collections:results.filter(e=>ids.has(e.order_id)&&(actor.role!=="driver"||e.driver_id===actor.driver_id)),truncated:results.length===2000,readOnly:false,scope:actor.role==="driver"?"assigned_driver":"authorized_staff"});
  }catch{return safeError()}
 }
 export async function onRequestPost({request,env}){
