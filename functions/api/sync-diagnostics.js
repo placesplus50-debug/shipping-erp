@@ -19,10 +19,10 @@ export async function onRequestGet({request,env}){
   }
   let outbox="migration_required";
   try{
-   const found=await env.DB.prepare("SELECT COUNT(*) AS total FROM sheet_sync_outbox").first();
-   outbox={available:true,total:found?.total||0};
+   const found=await env.DB.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN state='sent' THEN 1 ELSE 0 END) AS sent,SUM(CASE WHEN state!='sent' THEN 1 ELSE 0 END) AS pending FROM sheet_sync_outbox").first();
+   outbox={available:true,total:found?.total||0,sent:found?.sent||0,pending:found?.pending||0};
   }catch{}
-  return reply({mode:"read_only_diagnostic",googleSheetsModified:false,spreadsheetId,tabs,outbox,writeSyncEnabled:false});
+  return reply({mode:"read_only_diagnostic",googleSheetsModified:false,spreadsheetId,tabs,outbox,writeSyncEnabled:env.SHEETS_SYNC_ENABLED==="true"});
  }catch{return safeError()}
 }
 export const onRequestPost=()=>reply({error:"Read-only diagnostic"},405);
