@@ -1,0 +1,36 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>مراجعة التحصيل | Shipping Pulse</title><style>body{font:14px Tahoma,Arial;background:#f7f5fa;color:#291b42;margin:0}header{background:#291b42;color:white;padding:20px}main{max-width:1100px;margin:auto;padding:20px}.panel{background:white;border-radius:15px;padding:20px;margin:12px 0;border:1px solid #e7e1ee}button{padding:10px 16px;border:1px solid #ddd;border-radius:9px;cursor:pointer;background:#e2ff9b}button:disabled{opacity:.4}.actions{display:flex;gap:8px;flex-wrap:wrap}small{color:#777}input{padding:12px;border-radius:8px;border:1px solid #ddd;width:100%;box-sizing:border-box}h1{font-size:24px}#summary{font-weight:bold}</style></head><body><header><b>Shipping Pulse — مراجعة التحصيل</b></header><main><h1>تحصيل المندوبين</h1><p>المراجعة لا تعدّل Google Sheets. اعتمادات Preview فقط.</p><button id="reload">تحديث</button> <button id="export">تصدير CSV</button><div class="panel" id="summary">جارٍ التحميل...</div><input id="search" placeholder="ابحث بالشحنة أو المندوب"><section id="list"></section><p id="error"></p></main><script>
+let rows=[];const el=id=>document.getElementById(id);
+const fmt=c=>new Intl.NumberFormat('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2}).format(c/100);
+function render(){
+ const q=el('search').value.trim().toLowerCase(),root=el('list');root.replaceChildren();
+ const totals={pending:0,approved:0,rejected:0};
+ for(const r of rows)totals[r.decision||'pending']+=r.amount_cents;
+ el('summary').textContent='تحت المراجعة: '+fmt(totals.pending)+' ج.م | معتمد: '+fmt(totals.approved)+' ج.م | مرفوض: '+fmt(totals.rejected)+' ج.م';
+ for(const r of rows.filter(x=>(x.order_id+' '+x.driver_id).toLowerCase().includes(q))){
+ const card=document.createElement('article');card.className='panel';
+ const title=document.createElement('h3');title.textContent=r.order_id+' — '+r.driver_id;card.append(title);
+ const info=document.createElement('p');info.textContent='المبلغ: '+fmt(r.amount_cents)+' ج.م | الطريقة: '+r.method+' | الفلوس مع: '+r.holder+' | الحالة: '+(r.decision||'pending');card.append(info);
+ const date=document.createElement('small');date.textContent=r.created_at;card.append(date);
+ if(!r.decision){const actions=document.createElement('div');actions.className='actions';for(const [label,decision] of [['اعتماد','approved'],['رفض','rejected']]){const b=document.createElement('button');b.textContent=label;b.onclick=()=>review(r.id,decision);actions.append(b)}card.append(actions)}
+ root.append(card);
+ }
+}
+async function load(){
+ try{
+ const me=await fetch('/api/auth/me');if(me.status===401){location.href='/login.html';return}
+ const who=await me.json();if(!['super_admin','accountant','admin'].includes(who.user.role)){el('error').textContent='غير مصرح';return}
+ const res=await fetch('/api/collections',{cache:'no-store'}),data=await res.json();if(!res.ok)throw Error(data.error);
+ rows=data.collections;el('error').textContent='';render()
+ }catch(e){el('error').textContent=e.message}
+}
+async function review(id,decision){if(!confirm('تأكيد '+decision+' للتحصيل رقم '+id+'؟'))return;
+ const note=prompt('ملاحظات المراجعة (اختياري)','');if(note===null)return;
+ const res=await fetch('/api/collections',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({id,decision,note})}),data=await res.json();
+ if(!res.ok){alert(data.error||'فشل الاعتماد');return}load();
+}
+el('reload').onclick=load;el('search').oninput=render;el('export').onclick=()=>{
+ const lines=[['ID','Order','Driver','Amount EGP','Method','Holder','Decision','Created'],...rows.map(r=>[r.id,r.order_id,r.driver_id,(r.amount_cents/100).toFixed(2),r.method,r.holder,r.decision||'pending',r.created_at])];
+ const csv='\uFEFF'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='shipping-collections-preview.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
+};load();
+</script></body></html>
