@@ -6,7 +6,7 @@ export async function onRequestGet({request,env}){
  try{
   const user=await currentUser(request,env);
   if(!user)return reply({error:"Authentication required"},401);
-  if(!["super_admin","admin"].includes(user.role))return reply({error:"Admin only"},403);
+  if(!["super_admin","admin","accountant"].includes(user.role))return reply({error:"Accounting staff only"},403);
   const token=await getAccessToken(env);
   const tabs={};
   for(const tab of ["TRACKING","COLLECTIONS"]){
