@@ -14,7 +14,7 @@ export async function onRequestGet({request,env}){
  return reply({collections:results.filter(e=>ids.has(e.order_id)&&(actor.role!=="driver"||e.driver_id===actor.driver_id)),truncated:results.length===2000,readOnly:false,scope:actor.role==="driver"?"assigned_driver":"authorized_staff"});
  }catch{return safeError()}
 }
-export async function onRequestPost({request,env,context}){
+export async function onRequestPost({request,env,waitUntil}){
  if(!env.DB)return safeError();
  try{
  const actor=await currentUser(request,env);if(!actor)return reply({error:"Authentication required"},401);
@@ -38,11 +38,11 @@ export async function onRequestPost({request,env,context}){
  const queueCollection=env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) SELECT 'collection',id,'COLLECTIONS',json_object('settlementId','COL-'||id,'orderId',order_id,'driverId',driver_id,'amountCents',amount_cents,'method',method,'holder',holder,'note',note) FROM collection_events WHERE request_id=?").bind(b.requestId);
  const [result]=await env.DB.batch([insertCollection,queueCollection]);
  if(!result.meta?.changes)return reply({error:"COD already fully claimed"},409);
- if(env.SHEETS_SYNC_ENABLED==="true"&&context?.waitUntil)context.waitUntil(dispatchPending(env).catch(()=>{}));
+ if(env.SHEETS_SYNC_ENABLED==="true"&&typeof waitUntil==='function')waitUntil(dispatchPending(env).catch(()=>{}));
  return reply({ok:true,id:result.meta.last_row_id,review:"pending",googleSheetsModified:false},201);
  }catch{return safeError()}
 }
-export async function onRequestPatch({request,env,context}){
+export async function onRequestPatch({request,env,waitUntil}){
  if(!env.DB)return safeError();
  try{
  const actor=await currentUser(request,env);if(!actor)return reply({error:"Authentication required"},401);
@@ -55,12 +55,12 @@ export async function onRequestPatch({request,env,context}){
  const insertReview=env.DB.prepare("INSERT INTO collection_reviews(collection_id,reviewer_user_id,decision,note) VALUES(?,?,?,?)").bind(id,actor.id,b.decision,String(b.note||""));
  const queueReview=env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) SELECT 'review',r.id,'COLLECTIONS',json_object('settlementId','COL-'||r.collection_id,'decision',r.decision,'reviewedBy',r.reviewer_user_id,'note',r.note) FROM collection_reviews r WHERE r.collection_id=?").bind(id);
  await env.DB.batch([insertReview,queueReview]);
- if(env.SHEETS_SYNC_ENABLED==="true"&&context?.waitUntil)context.waitUntil(dispatchPending(env).catch(()=>{}));
+ if(env.SHEETS_SYNC_ENABLED==="true"&&typeof waitUntil==='function')waitUntil(dispatchPending(env).catch(()=>{}));
  return reply({ok:true,decision:b.decision},201);
  }catch{return safeError()}
 }
 
-export async function onRequestPut({request,env,context}){
+export async function onRequestPut({request,env,waitUntil}){
  if(!env.DB)return safeError();
  try{
  const actor=await currentUser(request,env);
@@ -78,7 +78,7 @@ export async function onRequestPut({request,env,context}){
  const queueHandover=env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) SELECT 'handover',h.id,'COLLECTIONS',json_object('settlementId','COL-'||h.collection_id,'amountCents',h.amount_cents,'destination',h.destination,'reviewedBy',h.reviewer_user_id,'note',h.note,'remittanceDate',h.created_at) FROM cash_handover h WHERE h.collection_id=?").bind(id);
  const [inserted]=await env.DB.batch([insertHandover,queueHandover]);
  if(!inserted.meta?.changes)return reply({error:"Already handed over"},409);
- if(env.SHEETS_SYNC_ENABLED==="true"&&context?.waitUntil)context.waitUntil(dispatchPending(env).catch(()=>{}));
+ if(env.SHEETS_SYNC_ENABLED==="true"&&typeof waitUntil==='function')waitUntil(dispatchPending(env).catch(()=>{}));
  return reply({ok:true,collectionId:id,handedOverCents:entry.amount_cents,destination,googleSheetsModified:false},201);
  }catch{return safeError()}
 }
