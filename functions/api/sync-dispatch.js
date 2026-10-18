@@ -33,6 +33,24 @@ export async function deliver(env,token,item){
  if(matches.length)await sheets(token,tab+"!A"+matches[0]+":J"+matches[0],"PUT",row);
  else await sheets(token,tab+"!A:J","POST",row);
 }
+// Called after a successful D1 transaction. Writes remain disabled unless explicitly enabled.
+export async function dispatchPending(env){
+ if(env.SHEETS_SYNC_ENABLED!=="true")return {sent:0,failed:0,enabled:false};
+ const token=await getAccessToken(env);
+ const {results}=await env.DB.prepare("SELECT * FROM sheet_sync_outbox WHERE state!='sent' ORDER BY id LIMIT 10").all();
+ let sent=0,failed=0;
+ for(const item of results||[]){
+  try{
+   await deliver(env,token,item);
+   await env.DB.prepare("UPDATE sheet_sync_outbox SET state='sent',attempts=attempts+1,last_error=NULL,synced_at=CURRENT_TIMESTAMP WHERE id=?").bind(item.id).run();
+   sent++;
+  }catch(e){
+   await env.DB.prepare("UPDATE sheet_sync_outbox SET state='error',attempts=attempts+1,last_error=? WHERE id=?").bind(String(e.message||"failed").slice(0,100),item.id).run();
+   failed++;
+  }
+ }
+ return {sent,failed,enabled:true};
+}
 export async function onRequestPost({request,env}){
  if(!env.DB)return safeError();
  try{
@@ -41,13 +59,7 @@ export async function onRequestPost({request,env}){
  if(!["super_admin","admin"].includes(user.role))return reply({error:"Admin only"},403);
  if(!sameOrigin(request))return reply({error:"Invalid origin"},403);
  if(env.SHEETS_SYNC_ENABLED!=="true")return reply({error:"Sync not enabled"},409);
- const token=await getAccessToken(env);
- const {results}=await env.DB.prepare("SELECT * FROM sheet_sync_outbox WHERE state!='sent' ORDER BY id LIMIT 10").all();
- let sent=0,failed=0;
- for(const item of results||[]){
-  try{await deliver(env,token,item);await env.DB.prepare("UPDATE sheet_sync_outbox SET state='sent',attempts=attempts+1,last_error=NULL,synced_at=CURRENT_TIMESTAMP WHERE id=?").bind(item.id).run();sent++}
-  catch(e){await env.DB.prepare("UPDATE sheet_sync_outbox SET state='error',attempts=attempts+1,last_error=? WHERE id=?").bind(String(e.message||"failed").slice(0,100),item.id).run();failed++}
- }
- return reply({sent,failed,mode:"manual_preview_dispatch"});
+ const result=await dispatchPending(env);
+ return reply({...result,mode:"manual_preview_dispatch"});
  }catch{return safeError()}
 }
