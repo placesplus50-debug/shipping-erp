@@ -7,12 +7,17 @@ function walk(dir){
  return readdirSync(dir,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(join(dir,entry.name)):entry.name.endsWith('.js')?[join(dir,entry.name)]:[]);
 }
 for(const path of walk('functions'))new Script(readFileSync(path,'utf8').replace(/^import .*$/gm,'').replace(/^export /gm,''),{filename:path});
-for(const path of ['driver.html','collections.html','login.html']){
+for(const path of ['driver.html','collections.html','login.html','home.html']){
  const html=readFileSync(path,'utf8');
  const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
  assert.ok(scripts.length,path+' must have inline scripts');
  for(const script of scripts)new Script(script,{filename:path});
 }
+const middleware=readFileSync('functions/_middleware.js','utf8');
+assert.ok(middleware.includes('"/home.html"'),'staff home redirect required');
+assert.ok(middleware.includes('if(homePage&&!["super_admin","admin","accountant"].includes(user.role))'),'home must be role-protected');
+const dispatcher=readFileSync('functions/api/sync-dispatch.js','utf8');
+assert.ok(dispatcher.includes('env.SHEETS_SYNC_ENABLED!=="true"'),'Sheets writes must remain gated');
 const driver=readFileSync('driver.html','utf8');
 const api=readFileSync('functions/api/collections.js','utf8');
 const status=readFileSync('functions/api/driver-status.js','utf8');
