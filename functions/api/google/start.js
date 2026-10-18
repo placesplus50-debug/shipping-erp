@@ -7,6 +7,6 @@ export async function onRequestGet({request,env}){
  const state=randomToken();
  await env.DB.prepare("INSERT INTO google_oauth_states(state,user_id,expires_at) VALUES(?,?,?)").bind(state,actor.id,new Date(Date.now()+600000).toISOString()).run();
  const url=new URL("https://accounts.google.com/o/oauth2/v2/auth");
- for(const [k,v] of Object.entries({client_id:env.GOOGLE_CLIENT_ID,redirect_uri:CALLBACK,response_type:"code",scope:"https://www.googleapis.com/auth/spreadsheets.readonly",access_type:"offline",prompt:"consent",state}))url.searchParams.set(k,v);
+ for(const [k,v] of Object.entries({client_id:env.GOOGLE_CLIENT_ID,redirect_uri:CALLBACK,response_type:"code",scope:"https://www.googleapis.com/auth/spreadsheets",access_type:"offline",prompt:"consent",state}))url.searchParams.set(k,v);
  return Response.redirect(url.toString(),302);
 }
