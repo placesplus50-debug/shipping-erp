@@ -7,7 +7,7 @@ function walk(dir){
  return readdirSync(dir,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(join(dir,entry.name)):entry.name.endsWith('.js')?[join(dir,entry.name)]:[]);
 }
 for(const path of walk('functions'))new Script(readFileSync(path,'utf8').replace(/^import .*$/gm,'').replace(/^export /gm,''),{filename:path});
-for(const path of ['driver.html','collections.html','login.html','home.html','orders.html','drivers.html']){
+for(const path of ['driver.html','collections.html','login.html','home.html','orders.html','drivers.html','users.html']){
  const html=readFileSync(path,'utf8');
  const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
  assert.ok(scripts.length,path+' must have inline scripts');
@@ -55,6 +55,9 @@ assert.equal(remaining({'Order ID':'ORD-1006','COD Due':'1,750'}),0);
 assert.equal(remaining({'Order ID':'ORD-1007','COD Due':'900'}),900);
 console.log('Preview static syntax, authorization guard, and COD balance checks passed.');
 
-for(const page of ['home.html','orders.html','drivers.html','collections.html','users.html','driver.html']){const html=readFileSync(page,'utf8');assert.ok(html.includes('id="spBack"'),'missing back button '+page);assert.ok(html.includes('class="sp-global-nav"'),'missing internal navigation '+page)}
+for(const page of ['home.html','orders.html','drivers.html','collections.html','users.html','driver.html']){const html=readFileSync(page,'utf8');assert.ok(html.includes('id="spBack"'),'missing back button '+page);assert.ok(html.includes('class="sp-navigation"'),'missing shared navigation '+page);assert.ok(html.includes('id="spLogout"'),'logout missing '+page);assert.ok(html.includes('/assets/app-shell.css'),'shared styles missing '+page);assert.ok(html.includes('/assets/app-shell.js'),'shared session handling missing '+page)}
 assert.ok(readFileSync('driver.html','utf8').includes('id="spLogout"'),'driver logout missing');
 assert.ok(readFileSync('login.html','utf8').includes('linear-gradient(135deg,#201431'),'login brand theme missing');
+
+
+new Script(readFileSync('assets/app-shell.js','utf8'),{filename:'assets/app-shell.js'});
