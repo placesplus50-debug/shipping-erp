@@ -101,7 +101,7 @@ function renderStatement(){
 function exportStatement(){
  const d=el('driverStatement').value;
  const lines=[['Event time','Driver','Order','Movement','Reference','Approved cash EGP','Cash handed over EGP','Driver cash balance EGP'],...statementLedger().map(e=>[e.date,e.driver,e.order,e.type,e.reference,(e.inflow/100).toFixed(2),(e.outflow/100).toFixed(2),(e.balance/100).toFixed(2)])];
- const csv='\\uFEFF'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\\r\\n');
+ const csv='\uFEFF'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='driver-statement-'+(d||'all')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 el('driverStatement').addEventListener('change',renderStatement);
