@@ -49,6 +49,14 @@ export async function onRequestGet({request,env}){
    return order;
   });
   const scoped=actor.role==="driver"?orders.filter(o=>o["Driver ID"]===actor.driver_id):orders;
-  return reply({orders:scoped,source:"google_sheets",scope:actor.role==="driver"?"assigned_driver":"authorized_staff",readOnly:true});
+  // Overlay preview-only status events without mutating Google Sheets.
+  const ids=scoped.map(o=>o["Order ID"]);
+  if(ids.length){
+   const rows=await env.DB.prepare("SELECT order_id,new_status,id FROM driver_status_events ORDER BY id DESC LIMIT 5000").all();
+   const latest=new Map();
+   for(const e of rows.results||[])if(!latest.has(e.order_id))latest.set(e.order_id,e.new_status);
+   for(const o of scoped)if(latest.has(o["Order ID"]))o["Effective Shipping Status"]=latest.get(o["Order ID"]);
+  }
+  return reply({orders:scoped,source:"google_sheets",scope:actor.role==="driver"?"assigned_driver":"authorized_staff",readOnly:true,statusSource:"preview_d1_overlay"});
  }catch{return safeError()}
 }
