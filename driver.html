@@ -11,7 +11,7 @@
 <div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
 <div id="message" role="status" aria-live="polite"></div><section id="orders" class="orders"></section></main>
 <script>
-const $=id=>document.getElementById(id);let orders=[],claims=[];
+const $=id=>document.getElementById(id);let orders=[],claims=[],historyComplete=true;
 function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
 function node(tag,cls,txt){const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el}
 function remaining(o){const due=Math.round((Number(String(o['COD Due']||0).replace(/,/g,''))||0)*100);const claimed=claims.filter(c=>c.order_id===o['Order ID']&&c.decision!=='rejected').reduce((n,c)=>n+c.amount_cents,0);return Math.max(0,due-claimed)/100}
@@ -31,7 +31,7 @@ function render(){
  const amount=node('div','money',finalReturn?'مرتجع — لا يوجد تحصيل مطلوب':(o._effectiveStatus==='Delivery failed'?'تعذر التسليم — لا تحصيل حتى إعادة التسليم':'المتبقي غير المسجل: '+fmt(remaining(o))+' ج.م'));c.append(amount);
  if(o.Notes)c.append(node('div','note','ملاحظات: '+o.Notes));
  const current=o._effectiveStatus||o['Shipping Status'];
- if(current==='Delivered'&&remaining(o)>0){
+ if(current==='Delivered'&&remaining(o)>0&&historyComplete){
   const button=node('button','','تسجيل تحصيل');button.addEventListener('click',()=>collect(o,button));c.append(button);
  }
 
@@ -95,6 +95,8 @@ async function load(){
  if(!claimResponse.ok)throw Error('تعذر تحميل التحصيلات');
  const claimData=await claimResponse.json();if(!Array.isArray(claimData.collections))throw Error('بيانات التحصيل غير متاحة');
  claims=claimData.collections;
+ historyComplete=!claimData.truncated;
+ if(!historyComplete)throw Error('سجل التحصيل تجاوز حد العرض؛ تم إيقاف تسجيل تحصيلات جديدة لحماية الأرصدة');
  $('count').textContent=fmt(orders.length);
  $('cod').textContent=fmt(orders.filter(o=>!['Returned','Delivery failed'].includes(o._effectiveStatus)).reduce((s,o)=>s+remaining(o),0))+' ج.م';
  const selected=$('filter').value;const states=[...new Set(orders.map(o=>o._effectiveStatus||o['Shipping Status']).filter(Boolean))];
