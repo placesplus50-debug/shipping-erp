@@ -55,6 +55,19 @@ function collectDialog(order,maxAmount){
  amount.oninput=()=>amount.setCustomValidity('');amount.focus();
  });
 }
+function notice(title,message,confirmMode=false){
+ return new Promise(resolve=>{
+ const overlay=document.createElement('div');overlay.className='modal-backdrop';
+ const panel=document.createElement('div');panel.className='modal';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
+ const heading=document.createElement('h2');heading.textContent=title;const body=document.createElement('p');body.textContent=message;
+ const actions=document.createElement('div');actions.className='actions';
+ const accept=document.createElement('button');accept.textContent=confirmMode?'تأكيد':'حسنًا';
+ const cancel=document.createElement('button');cancel.textContent='إلغاء';cancel.className='secondary';
+ const close=ok=>{overlay.remove();resolve(ok)};
+ accept.onclick=()=>close(true);cancel.onclick=()=>close(false);overlay.onclick=e=>{if(e.target===overlay)close(false)};
+ actions.append(accept);if(confirmMode)actions.append(cancel);panel.append(heading,body,actions);overlay.append(panel);document.body.append(overlay);accept.focus();
+ });
+}
 async function collect(order,btn){
  const due=remaining(order);if(due<=0)return;
  const values=await collectDialog(order,due);if(!values)return;
@@ -64,18 +77,18 @@ async function collect(order,btn){
  const bytes=crypto.getRandomValues(new Uint8Array(16)),requestId='col_'+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
  const res=await fetch('/api/collections',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({orderId:order['Order ID'],amountCents:Math.round(amount*100),method,holder,requestId})});
  const data=await res.json();if(!res.ok)throw Error(data.error||'تعذر التسجيل');
- await load();alert('تم تسجيل التحصيل للمراجعة، ولم يتم اعتماده بعد');
- }catch(e){alert('لم يتم الحفظ: '+e.message)}finally{btn.disabled=false}
+ await load();await notice('تم تسجيل التحصيل','تم تسجيل التحصيل للمراجعة، ولم يتم اعتماده بعد');
+ }catch(e){await notice('تعذر الحفظ',e.message)}finally{btn.disabled=false}
 }
 async function changeStatus(order,status,btn){
- if(!confirm('تأكيد تغيير حالة '+order['Order ID']+' إلى '+status+'؟'))return;
+ if(!await notice('تأكيد تغيير حالة الشحنة',order['Order ID']+' ← '+status,true))return;
  btn.disabled=true;
  try{
   const bytes=crypto.getRandomValues(new Uint8Array(16));const requestId='status_'+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
   const res=await fetch('/api/driver-status',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({orderId:order['Order ID'],status,requestId})});
   const data=await res.json();
   if(!res.ok)throw Error(data.error||'تعذر حفظ الحالة');
-  order._effectiveStatus=status;render();alert('تم تسجيل الحالة في قاعدة بيانات Preview فقط');
+  order._effectiveStatus=status;render();await notice('تم تحديث الحالة','تم حفظ الحالة في قاعدة بيانات Preview.');
  }catch(e){alert('لم يتم الحفظ: '+e.message)}finally{btn.disabled=false}
 }
 async function load(){
