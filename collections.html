@@ -30,11 +30,41 @@ async function load(){
  rows=data.collections;el('error').textContent='';render()
  }catch(e){el('error').textContent=e.message}
 }
-async function handover(id){const destination=prompt('مكان استلام النقدية: cashbox أو bank','cashbox');if(destination===null)return;if(!['cashbox','bank'].includes(destination)){alert('اختر cashbox أو bank');return}if(!confirm('هل استلمت النقدية فعليًا؟ هذا تأكيد توريد نهائي.'))return;const note=prompt('رقم إيصال التوريد أو ملاحظة','');if(note===null)return;const res=await fetch('/api/collections',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({id,destination,note})}),data=await res.json();if(!res.ok){alert(data.error||'فشل التوريد');return}load()}
-async function review(id,decision){if(!confirm('تأكيد '+decision+' للتحصيل رقم '+id+'؟'))return;
- const note=prompt('ملاحظات المراجعة (اختياري)','');if(note===null)return;
- const res=await fetch('/api/collections',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({id,decision,note})}),data=await res.json();
- if(!res.ok){alert(data.error||'فشل الاعتماد');return}load();
+function showDialog({title,description,fields=[],confirmLabel='تأكيد',danger=false}){
+ return new Promise(resolve=>{
+ const overlay=document.createElement('div');overlay.className='modal-backdrop';
+ const form=document.createElement('form');form.className='modal';
+ const h=document.createElement('h2');h.textContent=title;form.append(h);
+ const p=document.createElement('p');p.textContent=description;form.append(p);
+ const controls={};
+ for(const field of fields){
+ const label=document.createElement('label');label.textContent=field.label;form.append(label);
+ const input=document.createElement(field.options?'select':'textarea');input.name=field.name;
+ if(field.options)for(const [value,text] of field.options)input.add(new Option(text,value));
+ else{input.rows=3;input.maxLength=500;input.placeholder='اختياري'}
+ controls[field.name]=input;form.append(input);
+ }
+ const actions=document.createElement('div');actions.className='actions';
+ const cancel=document.createElement('button');cancel.type='button';cancel.className='secondary';cancel.textContent='إلغاء';
+ const submit=document.createElement('button');submit.type='submit';submit.textContent=confirmLabel;if(danger)submit.style.background='#ffe0e4';
+ actions.append(cancel,submit);form.append(actions);overlay.append(form);document.body.append(overlay);
+ const close=value=>{overlay.remove();resolve(value)};
+ cancel.onclick=()=>close(null);
+ overlay.addEventListener('click',e=>{if(e.target===overlay)close(null)});
+ form.onsubmit=e=>{e.preventDefault();close(Object.fromEntries(Object.entries(controls).map(([k,v])=>[k,v.value])))};
+ });
+}
+async function handover(id){
+ const values=await showDialog({title:'تأكيد توريد النقدية',description:'أكد الاستلام الفعلي قبل حفظ التوريد. لا يمكن تكرار العملية.',fields:[{name:'destination',label:'مكان التوريد',options:[['cashbox','الخزنة'],['bank','البنك']]},{name:'note',label:'رقم الإيصال أو ملاحظات'}],confirmLabel:'تأكيد التوريد'});
+ if(!values)return;
+ try{const res=await fetch('/api/collections',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({id,...values})}),data=await res.json();if(!res.ok)throw Error(data.error||'فشل التوريد');await load()}
+ catch(e){alert(e.message)}
+}
+async function review(id,decision){
+ const values=await showDialog({title:decision==='approved'?'اعتماد التحصيل':'رفض التحصيل',description:'مراجعة عملية التحصيل رقم '+id+' قبل تسجيل القرار النهائي.',fields:[{name:'note',label:'ملاحظات المراجعة'}],confirmLabel:decision==='approved'?'تأكيد الاعتماد':'تأكيد الرفض',danger:decision==='rejected'});
+ if(!values)return;
+ try{const res=await fetch('/api/collections',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({id,decision,...values})}),data=await res.json();if(!res.ok)throw Error(data.error||'فشل المراجعة');await load()}
+ catch(e){alert(e.message)}
 }
 
 function statementRows(){
