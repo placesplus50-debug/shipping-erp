@@ -69,13 +69,13 @@ async function handover(id){
  const values=await showDialog({title:'تأكيد توريد النقدية',description:'أكد الاستلام الفعلي قبل حفظ التوريد. لا يمكن تكرار العملية.',fields:[{name:'destination',label:'مكان التوريد',options:[['cashbox','الخزنة'],['bank','البنك']]},{name:'note',label:'رقم الإيصال أو ملاحظات'}],confirmLabel:'تأكيد التوريد'});
  if(!values)return;
  try{const res=await fetch('/api/collections',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({id,...values})}),data=await res.json();if(!res.ok)throw Error(data.error||'فشل التوريد');await load()}
- catch(e){alert(e.message)}
+ catch(e){await showDialog({title:'تعذر تنفيذ العملية',description:e.message,confirmLabel:'حسنًا'})}
 }
 async function review(id,decision){
  const values=await showDialog({title:decision==='approved'?'اعتماد التحصيل':'رفض التحصيل',description:'مراجعة عملية التحصيل رقم '+id+' قبل تسجيل القرار النهائي.',fields:[{name:'note',label:'ملاحظات المراجعة'}],confirmLabel:decision==='approved'?'تأكيد الاعتماد':'تأكيد الرفض',danger:decision==='rejected'});
  if(!values)return;
  try{const res=await fetch('/api/collections',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({id,decision,...values})}),data=await res.json();if(!res.ok)throw Error(data.error||'فشل المراجعة');await load()}
- catch(e){alert(e.message)}
+ catch(e){await showDialog({title:'تعذر تنفيذ العملية',description:e.message,confirmLabel:'حسنًا'})}
 }
 
 function statementRows(){
