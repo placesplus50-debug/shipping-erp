@@ -48,7 +48,7 @@ window.SP = (() => {
     modalObserver.observe(document.body,{childList:true});
     const roleDialog = document.getElementById('spRoleDialog');
     roleDialog.querySelectorAll('[data-close-role]').forEach(button => button.addEventListener('click', () => roleDialog.close()));
-    document.querySelector('[data-driver-link]').addEventListener('click', e => {
+    document.querySelector('[data-driver-link]')?.addEventListener('click', e => {
       if(user?.role !== 'driver'){e.preventDefault();roleDialog.showModal()}
     });
     const destination = () => user?.role === 'driver' ? '/driver.html' : '/home.html';
