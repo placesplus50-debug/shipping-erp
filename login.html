@@ -17,6 +17,19 @@ const form=document.getElementById('login'),msg=document.getElementById('message
 form.addEventListener('submit',async e=>{e.preventDefault();btn.disabled=true;msg.textContent='جارٍ التحقق...';msg.className='message';
 try{const response=await fetch('/api/auth/login',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({email:form.email.value,password:form.password.value})});
 const result=await response.json();if(!response.ok){msg.textContent=response.status===429?'محاولات كثيرة. حاول بعد 15 دقيقة.':response.status===503?'الخدمة غير مهيأة بعد. تواصل مع المسؤول.':'البريد الإلكتروني أو كلمة المرور غير صحيحة.';return}
-form.password.value='';const check=await fetch('/api/auth/me',{credentials:'same-origin',cache:'no-store'});const session=await check.json();if(!check.ok||!session.authenticated){msg.className='message';msg.textContent='تم قبول بيانات الدخول، لكن جلسة المتصفح لم تُحفظ. تأكد من السماح بملفات تعريف الارتباط لهذا الموقع ثم حاول مجددًا.';return}msg.className='message ok';msg.textContent='تم تسجيل الدخول بنجاح. جارٍ فتح صفحتك...';window.location.replace(session.user?.role==='driver'?'/driver.html':'/home.html');
+form.password.value='';
+let check,session;
+for(let attempt=0;attempt<3;attempt++){
+ check=await fetch('/api/auth/me',{credentials:'same-origin',cache:'no-store'});
+ session=await check.json();
+ if(check.ok&&session.authenticated)break;
+ if(check.status!==401)break;
+ if(attempt<2)await new Promise(resolve=>setTimeout(resolve,350*(attempt+1)));
+}
+if(!check.ok||!session.authenticated){
+ msg.className='message';
+ msg.textContent=check.status===503?'تعذر قراءة الجلسة من الخادم (503). حاول مجددًا بعد قليل.':session.diagnostic?.sessionCookiePresent?'جلسة الدخول وصلت للخادم لكن تعذر التحقق منها (401).':'ملف جلسة الدخول لم يصل للخادم (401). جرّب السماح بملفات تعريف الارتباط لهذا الموقع.';
+ return;
+}msg.className='message ok';msg.textContent='تم تسجيل الدخول بنجاح. جارٍ فتح صفحتك...';window.location.replace(session.user?.role==='driver'?'/driver.html':'/home.html');
 }catch{msg.textContent='تعذر الاتصال بالخادم. حاول مرة أخرى.'}finally{btn.disabled=false}});
 </script></body></html>
