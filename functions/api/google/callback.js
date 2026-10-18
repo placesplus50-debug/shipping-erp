@@ -16,11 +16,17 @@ export async function onRequestGet({request,env}){
  if(!response.ok)return reply({error:"Google authorization failed"},502);
  const tokens=await response.json();
  if(!tokens.refresh_token)return reply({error:"Google did not issue offline access; retry consent"},400);
+ // Validate actual granted scope before replacing the existing encrypted token.
+ // No Sheets writes occur during OAuth reconnection.
+ const scopeCheck=await fetch("https://oauth2.googleapis.com/tokeninfo?access_token="+encodeURIComponent(tokens.access_token||""));
+ if(!scopeCheck.ok)return reply({error:"Could not verify granted Google permissions; previous connection preserved"},502);
+ const granted=String((await scopeCheck.json()).scope||"").split(/\s+/);
+ if(!granted.includes("https://www.googleapis.com/auth/spreadsheets"))return reply({error:"Google Sheets write permission was not granted; previous connection preserved"},403);
  try{
   const key=await encryptionKey(env.GOOGLE_TOKEN_ENCRYPTION_KEY),iv=crypto.getRandomValues(new Uint8Array(12));
   const encrypted=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},key,enc.encode(tokens.refresh_token)));
   const payload=b64(iv)+"."+b64(encrypted);
   await env.DB.prepare("INSERT INTO google_oauth_tokens(id,refresh_token_ciphertext,updated_at) VALUES(1,?,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET refresh_token_ciphertext=excluded.refresh_token_ciphertext,updated_at=CURRENT_TIMESTAMP").bind(payload).run();
-  return reply({connected:true,message:"Google Sheets read-only authorization saved"});
+  return reply({connected:true,message:"Google Sheets read-write authorization saved; sync still disabled until verified"});
  }catch{return reply({error:"Token storage unavailable; run preview migrations and check encryption key"},503)}
 }
