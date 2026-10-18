@@ -8,7 +8,7 @@ export async function onRequestGet({request,env}){
  try{const actor=await currentUser(request,env);if(!actor)return reply({error:"Authentication required"},401);
  const orders=await scopedOrders(request,env),ids=new Set(orders.map(o=>o["Order ID"]));
  const {results}=await env.DB.prepare("SELECT e.id,e.order_id,e.driver_id,e.amount_cents,e.method,e.holder,e.note,e.created_at,r.decision,r.note AS review_note,r.created_at AS reviewed_at FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id ORDER BY e.id DESC LIMIT 2000").all();
- return reply({collections:results.filter(e=>ids.has(e.order_id)),readOnly:false,scope:actor.role==="driver"?"assigned_driver":"authorized_staff"});
+ return reply({collections:results.filter(e=>ids.has(e.order_id)&&(actor.role!=="driver"||e.driver_id===actor.driver_id)),readOnly:false,scope:actor.role==="driver"?"assigned_driver":"authorized_staff"});
  }catch{return safeError()}
 }
 export async function onRequestPost({request,env}){
@@ -29,7 +29,7 @@ export async function onRequestPost({request,env}){
  if(!Number.isSafeInteger(due)||due<=0||b.amountCents<=0)return reply({error:"No positive COD due"},409);
  const existing=await env.DB.prepare("SELECT id FROM collection_events WHERE request_id=?").bind(b.requestId).first();
  if(existing)return reply({error:"Duplicate request"},409);
- const sum=await env.DB.prepare("SELECT COALESCE(SUM(amount_cents),0) AS total FROM collection_events WHERE order_id=?").bind(b.orderId).first();
+ const sum=await env.DB.prepare("SELECT COALESCE(SUM(e.amount_cents),0) AS total FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id WHERE e.order_id=? AND (r.decision IS NULL OR r.decision='approved')").bind(b.orderId).first();
  if(sum.total+b.amountCents>due)return reply({error:"Amount exceeds remaining COD"},409);
  const result=await env.DB.prepare("INSERT INTO collection_events(order_id,driver_id,actor_user_id,amount_cents,method,holder,request_id,note) VALUES(?,?,?,?,?,?,?,?)").bind(b.orderId,actor.driver_id,actor.id,b.amountCents,b.method,b.holder,b.requestId,String(b.note||"")).run();
  return reply({ok:true,id:result.meta.last_row_id,review:"pending",googleSheetsModified:false},201);
