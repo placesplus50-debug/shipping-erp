@@ -6,14 +6,15 @@
 </style></head><body>
 <header><div><b>📦 Shipping Pulse</b><br><small id="who">لوحة المندوب</small></div><span class="tag">Preview</span></header>
 <main><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
-<div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي للتحصيل (COD Due)</small><strong id="cod">—</strong></div></div>
+<div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي غير المسجل للتحصيل</small><strong id="cod">—</strong></div></div>
 <div class="notice">مرحلة اختبار: البيانات تُقرأ مباشرة من Google Sheets. تغيير حالة الشحنة وتسجيل التحصيل محفوظان في Preview فقط، دون تعديل Google Sheets.</div>
 <div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
 <div id="message" role="status" aria-live="polite"></div><section id="orders" class="orders"></section></main>
 <script>
-const $=id=>document.getElementById(id);let orders=[];
+const $=id=>document.getElementById(id);let orders=[],claims=[];
 function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
 function node(tag,cls,txt){const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el}
+function remaining(o){const due=Math.round((Number(String(o['COD Due']||0).replace(/,/g,''))||0)*100);const claimed=claims.filter(c=>c.order_id===o['Order ID']&&c.decision!=='rejected').reduce((n,c)=>n+c.amount_cents,0);return Math.max(0,due-claimed)/100}
 function render(){
  const q=$('search').value.trim().toLowerCase(),f=$('filter').value;
  const visible=orders.filter(o=>(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
@@ -26,10 +27,10 @@ function render(){
  const details=node('div','details');
  details.append(node('span','', '📍 '+(o['City / Area']||'—')),node('span','', '💳 '+(o['Payment Type']||'—')),node('span','', 'حالة الدفع: '+(o['Payment Status']||'—')));
  c.append(details);
- const amount=node('div','money','المتبقي للتحصيل: '+fmt(o['COD Due'])+' ج.م');c.append(amount);
+ const amount=node('div','money','المتبقي للتحصيل: '+fmt(remaining(o))+' ج.م');c.append(amount);
  if(o.Notes)c.append(node('div','note','ملاحظات: '+o.Notes));
  const current=o._effectiveStatus||o['Shipping Status'];
- if(current==='Delivered'&&Number(String(o['COD Due']||0).replace(/,/g,''))>0){
+ if(current==='Delivered'&&remaining(o)>0){
   const button=node('button','','تسجيل تحصيل');button.addEventListener('click',()=>collect(o,button));c.append(button);
  }
 
@@ -39,7 +40,7 @@ function render(){
  }
 }
 async function collect(order,btn){
- const due=Number(String(order['COD Due']||0).replace(/,/g,''));
+ const due=remaining(order);
  const raw=prompt('المبلغ المحصل بالجنيه (الحد الأقصى '+due+')',String(due));if(raw===null)return;
  const amount=Number(raw);if(!Number.isFinite(amount)||amount<=0||Math.round(amount*100)>Math.round(due*100)){alert('مبلغ غير صحيح');return}
  const method=prompt('طريقة التحصيل: cash أو company_transfer أو paymob','cash');if(method===null)return;
@@ -51,7 +52,7 @@ async function collect(order,btn){
  const bytes=crypto.getRandomValues(new Uint8Array(16)),requestId='col_'+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
  const res=await fetch('/api/collections',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({orderId:order['Order ID'],amountCents:Math.round(amount*100),method,holder,requestId})});
  const data=await res.json();if(!res.ok)throw Error(data.error||'تعذر التسجيل');
- alert('تم تسجيل التحصيل للمراجعة، ولم يتم اعتماده بعد');
+ await load();alert('تم تسجيل التحصيل للمراجعة، ولم يتم اعتماده بعد');
  }catch(e){alert('لم يتم الحفظ: '+e.message)}finally{btn.disabled=false}
 }
 async function changeStatus(order,status,btn){
@@ -78,8 +79,12 @@ async function load(){
  const data=await res.json();if(!res.ok)throw Error(data.error||'تعذر تحميل الشحنات');
  if(data.scope!=='assigned_driver'||!Array.isArray(data.orders))throw Error('تعذر التحقق من نطاق شحنات المندوب');
  orders=data.orders.map(o=>({...o,_effectiveStatus:o['Effective Shipping Status']||o['Shipping Status']}));
+ const claimResponse=await fetch('/api/collections',{credentials:'same-origin',cache:'no-store'});
+ if(!claimResponse.ok)throw Error('تعذر تحميل التحصيلات');
+ const claimData=await claimResponse.json();if(!Array.isArray(claimData.collections))throw Error('بيانات التحصيل غير متاحة');
+ claims=claimData.collections;
  $('count').textContent=fmt(orders.length);
- $('cod').textContent=fmt(orders.reduce((s,o)=>s+(Number(String(o['COD Due']||0).replace(/,/g,''))||0),0))+' ج.م';
+ $('cod').textContent=fmt(orders.filter(o=>!['Returned','Delivery failed'].includes(o._effectiveStatus)).reduce((s,o)=>s+remaining(o),0))+' ج.م';
  const selected=$('filter').value;const states=[...new Set(orders.map(o=>o._effectiveStatus||o['Shipping Status']).filter(Boolean))];
  $('filter').replaceChildren(new Option('كل الحالات',''),...states.map(s=>new Option(s,s)));$('filter').value=states.includes(selected)?selected:'';
  $('message').textContent='';render();
