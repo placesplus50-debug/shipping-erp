@@ -3,7 +3,7 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
 :root{font-family:Cairo,Tahoma,Arial,sans-serif;color:#291b42;background:#f8f7fc}*{box-sizing:border-box}body{margin:0}header{background:#291b42;color:white;padding:18px max(18px,calc((100% - 900px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}header b{font-size:21px}header small{color:#d8cbed}main{max-width:900px;margin:auto;padding:24px 16px 60px}.heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}h1{margin:0;font-size:25px}p{color:#7b728c;margin:3px 0 18px}.tag{background:#e5f5c6;color:#456321;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0}.stat,.card{background:white;border:1px solid #eee9f3;border-radius:17px;padding:18px;box-shadow:0 6px 25px #291b4208}.stat small{color:#827891}.stat strong{display:block;font-size:27px}.toolbar{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap}input,select,button{font:inherit;border-radius:11px;padding:10px 12px;border:1px solid #e3dcea;background:white}input{flex:1;min-width:170px}button{cursor:pointer;font-weight:700}button:disabled{opacity:.6}.orders{display:grid;gap:12px}.card h2{font-size:17px;margin:0}.cardtop,.details{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.details{margin-top:13px;color:#625870;font-size:13px;line-height:2}.status{border-radius:9px;background:#f0eafa;color:#614191;padding:5px 10px;font-weight:800;font-size:12px}.money{color:#41275f;font-size:18px;font-weight:800}.note{font-size:12px;color:#80758f;margin-top:10px}.notice{background:#f0eafa;border-radius:12px;padding:12px 15px;font-size:12px;color:#563b75;margin:16px 0}.error{color:#b53248}.empty{text-align:center;padding:38px;color:#827891}.logout{color:white;text-decoration:none;border:1px solid #ffffff55;padding:7px 10px;border-radius:10px;font-size:12px}@media(max-width:460px){header b{font-size:17px}h1{font-size:22px}.stat strong{font-size:23px}}
-</style></head><body>
+ .modal-backdrop{position:fixed;inset:0;background:#1c1326a8;display:grid;place-items:center;padding:15px;z-index:50}.modal{background:#fff;border-radius:22px;padding:24px;width:min(440px,100%);box-shadow:0 18px 60px #20132d45}.modal h2{margin:0 0 8px;font-size:21px}.modal p{margin:0 0 16px}.modal label{display:block;font-weight:700;margin:12px 0 6px}.modal input,.modal select{display:block;width:100%;max-width:none}.modal .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.modal .secondary{background:#f2f0f7;color:#4b3c5d}</style></head><body>
 <header><div><b>📦 Shipping Pulse</b><br><small id="who">لوحة المندوب</small></div><span class="tag">Preview</span></header>
 <main><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
 <div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي غير المسجل للتحصيل</small><strong id="cod">—</strong></div></div>
@@ -39,14 +39,25 @@ function render(){
  root.append(c)
  }
 }
+function collectDialog(order,maxAmount){
+ return new Promise(resolve=>{
+ const backdrop=node('div','modal-backdrop');const form=node('form','modal');
+ const title=node('h2','','تسجيل تحصيل — '+order['Order ID']);form.append(title);
+ const hint=node('p','','المتبقي غير المسجل: '+maxAmount.toFixed(2)+' ج.م • التحصيل يحتاج اعتماد المحاسب');form.append(hint);
+ const amountLabel=node('label','','المبلغ بالجنيه');const amount=document.createElement('input');amount.type='number';amount.min='0.01';amount.step='0.01';amount.max=String(maxAmount);amount.value=String(maxAmount);amount.required=true;form.append(amountLabel,amount);
+ const methodLabel=node('label','','طريقة التحصيل');const method=document.createElement('select');
+ for(const [v,t] of [['cash','نقدي مع المندوب'],['company_transfer','تحويل للشركة'],['paymob','Paymob']])method.add(new Option(t,v));
+ form.append(methodLabel,method);
+ const buttons=node('div','actions');const cancel=node('button','secondary','إلغاء');cancel.type='button';const submit=node('button','','تسجيل للمراجعة');submit.type='submit';buttons.append(cancel,submit);form.append(buttons);backdrop.append(form);document.body.append(backdrop);
+ const close=value=>{backdrop.remove();resolve(value)};cancel.onclick=()=>close(null);backdrop.onclick=e=>{if(e.target===backdrop)close(null)};
+ form.onsubmit=e=>{e.preventDefault();const value=Number(amount.value);if(!Number.isFinite(value)||value<=0||Math.round(value*100)>Math.round(maxAmount*100)){amount.setCustomValidity('المبلغ أكبر من المتبقي');amount.reportValidity();return}close({amount:value,method:method.value})};
+ amount.oninput=()=>amount.setCustomValidity('');amount.focus();
+ });
+}
 async function collect(order,btn){
- const due=remaining(order);
- const raw=prompt('المبلغ المحصل بالجنيه (الحد الأقصى '+due+')',String(due));if(raw===null)return;
- const amount=Number(raw);if(!Number.isFinite(amount)||amount<=0||Math.round(amount*100)>Math.round(due*100)){alert('مبلغ غير صحيح');return}
- const method=prompt('طريقة التحصيل: cash أو company_transfer أو paymob','cash');if(method===null)return;
- if(!['cash','company_transfer','paymob'].includes(method)){alert('طريقة غير صحيحة');return}
- const holder=method==='cash'?'driver':'company';
- if(!confirm('تسجيل '+amount+' ج.م على '+order['Order ID']+'؟ الحالة: بانتظار مراجعة المحاسب'))return;
+ const due=remaining(order);if(due<=0)return;
+ const values=await collectDialog(order,due);if(!values)return;
+ const {amount,method}=values,holder=method==='cash'?'driver':'company';
  btn.disabled=true;
  try{
  const bytes=crypto.getRandomValues(new Uint8Array(16)),requestId='col_'+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
