@@ -12,7 +12,8 @@ export async function onRequest({request,env,next}) {
     const user=await currentUser(request,env);
     if(!user)return Response.redirect(url.origin+"/login.html",302);
     // The legacy dashboard still contains unscoped fixtures; super admins only.
-    if(legacy&&user.role!=="super_admin")return reply({error:"Dashboard access pending role-scoped API"},403);
+    if(legacy&&user.role!=="super_admin")return Response.redirect(url.origin+(user.role==="driver"?"/driver.html":"/collections.html"),302);
+    if(legacy&&user.role==="super_admin")return Response.redirect(url.origin+"/collections.html",302);
     // Driver page must never be served to other roles.
     if(driverPage&&(user.role!=="driver"||!user.driver_id))return reply({error:"Driver access required"},403);
     if(collectionsPage&&!["super_admin","accountant","admin"].includes(user.role))return reply({error:"Accounting access required"},403);
