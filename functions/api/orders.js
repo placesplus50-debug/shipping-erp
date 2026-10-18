@@ -16,7 +16,7 @@ export async function getAccessToken(env){
  const [ivB64,dataB64]=record.refresh_token_ciphertext.split(".");
  if(!ivB64||!dataB64)throw Error("invalid_token");
  const bytes=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
- const raw=bytes(env.GOOGLE_TOKEN_ENCRYPTION_KEY);
+ const secret=env.GOOGLE_TOKEN_ENCRYPTION_KEY;const raw=/^[a-f0-9]{64}$/i.test(secret)?Uint8Array.from(secret.match(/.{2}/g),v=>parseInt(v,16)):bytes(secret);
  if(raw.length!==32)throw Error("invalid_key");
  const key=await crypto.subtle.importKey("raw",raw,{name:"AES-GCM"},false,["decrypt"]);
  const token=new TextDecoder().decode(await crypto.subtle.decrypt({name:"AES-GCM",iv:bytes(ivB64)},key,bytes(dataB64)));
