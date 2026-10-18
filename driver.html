@@ -27,7 +27,8 @@ function render(){
  const details=node('div','details');
  details.append(node('span','', '📍 '+(o['City / Area']||'—')),node('span','', '💳 '+(o['Payment Type']||'—')),node('span','', 'حالة الدفع: '+(o['Payment Status']||'—')));
  c.append(details);
- const amount=node('div','money','المتبقي للتحصيل: '+fmt(remaining(o))+' ج.م');c.append(amount);
+ const finalReturn=['Returned','Delivery failed'].includes(o._effectiveStatus||o['Shipping Status']);
+ const amount=node('div','money',finalReturn?'مرتجع / تعذر التسليم — لا يوجد تحصيل مطلوب':'المتبقي غير المسجل: '+fmt(remaining(o))+' ج.م');c.append(amount);
  if(o.Notes)c.append(node('div','note','ملاحظات: '+o.Notes));
  const current=o._effectiveStatus||o['Shipping Status'];
  if(current==='Delivered'&&remaining(o)>0){
