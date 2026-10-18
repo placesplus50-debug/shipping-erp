@@ -1,7 +1,17 @@
 <!doctype html>
-<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة المستخدمين | Shipping Pulse</title>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة المستخدمين | Shipping Pulse</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"><meta name="theme-color" content="#251741">
 <style>
 *{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;background:#f7f5fb;color:#2b1d40;margin:0}header{background:#281940;color:white;padding:22px max(20px,calc((100vw - 1080px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}header a{color:#d6ff5a;text-decoration:none}.wrap{max-width:1080px;margin:30px auto;padding:0 18px}h1{margin:0 0 8px}.hint{color:#706780;line-height:1.8}.grid{display:grid;grid-template-columns:360px 1fr;gap:20px}.panel{background:white;border:1px solid #e8e1f0;border-radius:17px;padding:22px;box-shadow:0 8px 28px #2b1d4008}label{display:block;font-weight:700;margin:15px 0 7px;font-size:13px}input,select{width:100%;padding:12px;border:1px solid #dcd3e6;border-radius:9px;font:inherit;background:white}button{background:#d6ff5a;color:#29183e;border:0;padding:12px 20px;border-radius:10px;font-weight:800;cursor:pointer;font:inherit}button:disabled{opacity:.5;cursor:wait}.secondary{background:#eee8f5}.permissions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:13px 0}.permissions label{display:flex;align-items:center;gap:7px;font-size:12px;margin:0;font-weight:400}.permissions input{width:auto}table{border-collapse:collapse;width:100%;font-size:13px}td,th{padding:12px;border-bottom:1px solid #eee8f5;text-align:right}th{background:#faf8fd}.scroll{overflow:auto}.status{min-height:26px;margin:14px 0;color:#8c2945}.ok{color:#237340}.tag{background:#eee9f6;padding:4px 8px;border-radius:6px}.muted{color:#81758d;font-size:12px}.hide{display:none!important}@media(max-width:800px){.grid{grid-template-columns:1fr}header{padding:20px}.panel{padding:16px}}
+</style><style>
+:root{--sp-deep:#251741;--sp-purple:#5640ad;--sp-lime:#d2ec6d;--sp-bg:#f7f6fb}
+.sp-logo{display:inline-block;width:38px;height:38px;vertical-align:middle;object-fit:contain;border-radius:11px;flex-shrink:0}
+.brand .sp-logo{width:42px;height:42px;margin-inline-end:8px}
+.brand:has(.sp-logo) span.logo{background:none}
+body{background-color:var(--sp-bg)}
+button,a,input,select{transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #a6a0e6;outline-offset:3px}
+dialog{border-radius:20px!important;box-shadow:0 22px 70px #25174135!important}
+@media(max-width:680px){.sp-logo{width:34px;height:34px}}
 </style></head><body><header><b>◉ shipping<span style="color:#d6ff5a">pulse.</span> / إدارة المستخدمين</b><a href="/">العودة للداشبورد</a></header>
 <main class="wrap"><h1>المستخدمون والمناديب</h1><p class="hint">إدارة تجريبية متاحة للمدير الرئيسي فقط. إنشاء الحسابات يتم في قاعدة البيانات المشتركة، لذلك استخدم بيانات اختبار فقط ولا تضف حسابات حقيقية الآن.</p><p id="notice" class="status" role="status">جارٍ التحقق من الصلاحيات...</p>
 <div class="grid hide" id="workspace"><section class="panel"><h2>إضافة مستخدم تجريبي</h2><form id="create">
