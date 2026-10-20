@@ -47,14 +47,14 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
 .route-arrive-button:hover{background:#c6e45a}
 .route-arrive-button:focus-visible{outline:3px solid #6546b2;outline-offset:2px}
 @media(max-width:600px){.route-stop{align-items:stretch;flex-direction:column;gap:8px;padding:12px}.route-stop-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}.route-stop-action,.route-arrive-button{display:block;width:100%;white-space:normal}.route-plan-heading{font-size:16px}}
-</style></head><body class="sp-app sp-page-driver" data-page="driver"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav" href="/collections.html" data-staff><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a><a class="sp-nav active" href="/driver.html" data-driver-link aria-current="page"><span aria-hidden="true">◉</span>واجهة المندوب</a><a class="sp-nav" href="/system-check.html" id="systemCheckNav" data-staff hidden><span aria-hidden="true">✓</span>فحص النظام</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Production</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / شحناتي</small><h1>شحناتي</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog>
+</style><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><style>.inmap-panel{background:white;border:1px solid #eae6f2;border-radius:18px;padding:14px;margin:14px 0}.inmap-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.inmap-map{height:340px;border-radius:12px;overflow:hidden;direction:ltr}.inmap-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.inmap-actions>*{flex:1;text-align:center}.inmap-actions a{margin:0}@media(max-width:600px){.inmap-map{height:290px}}</style></head><body class="sp-app sp-page-driver" data-page="driver"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav" href="/collections.html" data-staff><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a><a class="sp-nav active" href="/driver.html" data-driver-link aria-current="page"><span aria-hidden="true">◉</span>واجهة المندوب</a><a class="sp-nav" href="/system-check.html" id="systemCheckNav" data-staff hidden><span aria-hidden="true">✓</span>فحص النظام</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Production</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / شحناتي</small><h1>شحناتي</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog>
 
 <main id="spMain" tabindex="-1"><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
 <div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي غير المسجل للتحصيل</small><strong id="cod">—</strong></div></div>
 <div class="notice">مرحلة اختبار: البيانات تُقرأ مباشرة من Google Sheets. تغيير الحالة وتسجيل التحصيل يُحفظان في D1 وتُرسل تحديثاتهما إلى Google Sheets عند تفعيل المزامنة.</div>
 <div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
-<div class="location-toolbar"><button type="button" id="sortByLocation">📍 رتّب حسب موقعي</button> <button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يرتب الشحنات بإحداثيات GPS تقريبياً ويعرض قائمة المحطات مع زر ملاحة لكل شحنة. الموقع يُطلب مرة واحدة ولا يُحفظ. رابط Google Maps يعرض أول 9 محطات فقط.</p><div id="message" role="status" aria-live="polite"></div><section id="routePlan" hidden></section><section id="orders" class="orders"></section></main>
-<script>
+<div class="location-toolbar"><button type="button" id="sortByLocation">📍 رتّب حسب موقعي</button> <button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يرتب الشحنات بإحداثيات GPS تقريبياً ويعرض قائمة المحطات مع زر ملاحة لكل شحنة. الموقع يُطلب مرة واحدة ولا يُحفظ. رابط Google Maps يعرض أول 9 محطات فقط.</p><div id="message" role="status" aria-live="polite"></div><section id="insideMapPanel" class="inmap-panel" hidden><div class="inmap-head"><strong>🗺️ خريطة الشحنة داخل Shipping Pulse</strong><button type="button" id="insideMapClose">✕</button></div><p id="insideMapStatus">الخريطة للعرض؛ تعليمات القيادة متاحة في Google Maps.</p><div id="insideMap" class="inmap-map"></div><div class="inmap-actions"><button type="button" id="insideMapFollow">📍 متابعة موقعي</button><button type="button" id="insideMapStop">إيقاف المتابعة</button><a id="insideMapExternal" class="map-link" target="_blank" rel="noopener noreferrer">🚗 فتح Google Maps</a></div></section><section id="routePlan" hidden></section><section id="orders" class="orders"></section></main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
 const $=id=>document.getElementById(id);let orders=[],claims=[],historyComplete=true;
 function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
 function node(tag,cls,txt){const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el}
@@ -110,6 +110,38 @@ function openRoute(items,origin){
  if(stops.length>1)params.set('waypoints',stops.slice(0,-1).join('|'));
  window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer');
 }
+let insideMap=null,insideMapLayers=[],insideMapWatch=null,insideMapPosition=null;
+function stopInsideMapWatch(){if(insideMapWatch!==null&&navigator.geolocation)navigator.geolocation.clearWatch(insideMapWatch);insideMapWatch=null}
+function showInsideMap(order){
+ const panel=$('insideMapPanel');panel.hidden=false;panel.dataset.orderId=String(order['Order ID']);
+ $('insideMapExternal').href=mapLink(order)||'#';
+ const point=gpsPoint(order);
+ if(!point){$('insideMapStatus').textContent='الموقع لا يحتوي على إحداثيات دقيقة؛ استخدم Google Maps.';return}
+ if(!window.L){$('insideMapStatus').textContent='الخريطة غير متاحة حاليًا؛ استخدم Google Maps.';return}
+ if(!insideMap){insideMap=L.map('insideMap');L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(insideMap)}
+ insideMapLayers.forEach(layer=>insideMap.removeLayer(layer));insideMapLayers=[];
+ insideMapLayers.push(L.marker(point).addTo(insideMap).bindPopup('موقع الشحنة'));
+ if(insideMapPosition){
+  insideMapLayers.push(L.circleMarker(insideMapPosition,{radius:8,color:'#5842a8',fillColor:'#d2ec6d',fillOpacity:1}).addTo(insideMap));
+  insideMapLayers.push(L.polyline([insideMapPosition,point],{color:'#5842a8',dashArray:'7,8'}).addTo(insideMap));
+  insideMap.fitBounds([insideMapPosition,point],{padding:[30,30],maxZoom:15});
+ }else insideMap.setView(point,14);
+ $('insideMapStatus').textContent='الخط المتقطع يوضح الاتجاه التقريبي وليس طريق القيادة.';
+ requestAnimationFrame(()=>insideMap.invalidateSize());
+}
+$('insideMapClose').onclick=()=>{stopInsideMapWatch();$('insideMapPanel').hidden=true};
+$('insideMapStop').onclick=()=>{stopInsideMapWatch();$('insideMapStatus').textContent='تم إيقاف متابعة الموقع.'};
+$('insideMapFollow').onclick=()=>{
+ if(!navigator.geolocation){$('insideMapStatus').textContent='المتصفح لا يدعم الموقع.';return}
+ stopInsideMapWatch();
+ $('insideMapStatus').textContent='جارٍ تحديد موقعك...';
+ insideMapWatch=navigator.geolocation.watchPosition(p=>{
+  insideMapPosition=[p.coords.latitude,p.coords.longitude];
+  const order=orders.find(o=>String(o['Order ID'])===$('insideMapPanel').dataset.orderId);
+  if(order)showInsideMap(order);
+ },()=>{$('insideMapStatus').textContent='تعذر الوصول لموقعك.';stopInsideMapWatch()},{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
+};
+window.addEventListener('pagehide',stopInsideMapWatch);
 let plannedStops=[];
 let arrivedStopIds=new Set();
 let routeStorageKey='';
@@ -156,6 +188,8 @@ function showPlannedStops(){
   const link=node('a','map-link route-stop-action',next?'🚗 ابدأ الملاحة':'📍 ملاحة');
   link.href=mapLink(o);link.target='_blank';link.rel='noopener noreferrer';
   actions.append(link);
+  const embedded=node('button','route-arrive-button','🗺️ خريطة داخلية');
+  embedded.type='button';embedded.onclick=()=>showInsideMap(o);actions.append(embedded);
   if(next){
    const arrivedButton=node('button','route-arrive-button','✓ تم الوصول للمحطة');
    arrivedButton.type='button';
