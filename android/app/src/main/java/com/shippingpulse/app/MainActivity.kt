@@ -13,6 +13,9 @@ import android.webkit.WebViewClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.widget.Button
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.widget.LinearLayout
 import android.view.View
 import android.webkit.CookieManager
@@ -34,24 +37,41 @@ class MainActivity : Activity() {
         val layout = LinearLayout(this)
         layout.orientation = LinearLayout.VERTICAL
         trackingButton = Button(this)
-        trackingButton.text = "بدء مشاركة الموقع أثناء الوردية"
+        trackingButton.text = "📍 بدء مشاركة الموقع"
+        trackingButton.textSize = 13f
+        trackingButton.isAllCaps = false
+        trackingButton.setTextColor(Color.rgb(39, 25, 65))
+        trackingButton.setTypeface(null, Typeface.BOLD)
+        trackingButton.background = GradientDrawable().apply {
+            setColor(Color.rgb(210, 236, 109))
+            cornerRadius = 26f
+        }
+        trackingButton.setPadding(18, 8, 18, 8)
         trackingButton.visibility = View.GONE
         trackingButton.setOnClickListener {
             if (!isDriver) return@setOnClickListener
             if (sharing) {
                 startService(Intent(this, TrackingService::class.java).setAction(TrackingService.STOP))
                 sharing = false
-                trackingButton.text = "بدء مشاركة الموقع أثناء الوردية"
+                trackingButton.text = "📍 بدء مشاركة الموقع"
             } else if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
                 checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 startForegroundService(Intent(this, TrackingService::class.java).setAction(TrackingService.START))
                 sharing = true
-                trackingButton.text = "إيقاف مشاركة الموقع"
+                trackingButton.text = "■ إيقاف مشاركة الموقع"
             } else {
                 requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 7)
             }
         }
-        layout.addView(trackingButton)
+        val trackingRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundColor(Color.rgb(37, 23, 65))
+            setPadding(12, 5, 12, 5)
+            gravity = android.view.Gravity.CENTER
+        }
+        trackingRow.addView(trackingButton, LinearLayout.LayoutParams(-2, -2))
+        trackingRow.visibility = View.GONE
+        layout.addView(trackingRow)
         layout.addView(browser, LinearLayout.LayoutParams(-1, 0, 1f))
         setContentView(layout)
         browser.settings.javaScriptEnabled = true
@@ -75,13 +95,14 @@ class MainActivity : Activity() {
                         runOnUiThread {
                             isDriver = role == "driver"
                             trackingButton.visibility = if (isDriver) View.VISIBLE else View.GONE
+                            trackingRow.visibility = if (isDriver) View.VISIBLE else View.GONE
                             if (!isDriver && sharing) {
                                 startService(Intent(this@MainActivity, TrackingService::class.java).setAction(TrackingService.STOP))
                                 sharing = false
                             }
                         }
                     } catch (_: Exception) {
-                        runOnUiThread { isDriver = false; trackingButton.visibility = View.GONE }
+                        runOnUiThread { isDriver = false; trackingButton.visibility = View.GONE; trackingRow.visibility = View.GONE }
                     }
                 }.start()
             }
