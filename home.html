@@ -89,7 +89,18 @@ function renderDashboard(){
  el('approved').textContent=fmt(matching.filter(r=>r.decision==='approved').length);
  renderOverview(orders);renderExceptions();
  const alerts=el('cashAlerts');alerts.replaceChildren();
- for(const [id,balance] of f.balances){if(balance<=0)continue;const p=document.createElement('p');p.style.cssText='background:#fff2d9;color:#7c4d09;padding:10px 14px;border-radius:10px;font-weight:700';p.textContent='تنبيه عهدة: '+driverLabel(id)+' عليه '+egp(balance)+' ج.م غير موردة';alerts.append(p)}
+ const thresholdHours=48,now=Date.now(),end=el('dashTo').value;
+ const visible=financialRows.filter(r=>(!driver||r.driver_id===driver)&&beforeEnd(r.created_at));
+ const pendingReview=visible.filter(r=>!r.decision&&r.amount_cents>0&&r.method==='cash'&&r.holder==='driver'&&inDates(r.created_at));
+ const overdue=pendingReview.filter(r=>now-new Date(r.created_at+'Z').getTime()>thresholdHours*3600000);
+ const overdueApproved=visible.filter(r=>r.decision==='approved'&&r.method==='cash'&&r.holder==='driver'&&!r.handover_id&&now-new Date(r.reviewed_at||r.created_at+'Z').getTime()>thresholdHours*3600000);
+ const heading=document.createElement('p');heading.style.cssText='font-weight:800;color:#392653';heading.textContent='تنبيهات التحصيل والعهدة · التأخير بعد '+thresholdHours+' ساعة (مدة مبدئية)';alerts.append(heading);
+ const alertLine=(message,urgent=false)=>{const p=document.createElement('p');p.style.cssText='background:'+(urgent?'#ffe5e7':'#fff2d9')+';color:'+(urgent?'#8e293c':'#7c4d09')+';padding:10px 14px;border-radius:10px;font-weight:700';p.textContent=message;alerts.append(p)};
+ for(const [id,balance] of f.balances)if(balance>0)alertLine('عهدة غير موردة · '+driverLabel(id)+' · '+egp(balance)+' ج.م');
+ for(const r of overdueApproved)alertLine('توريد متأخر · '+driverLabel(r.driver_id)+' · '+r.order_id+' · '+egp(r.amount_cents)+' ج.م',true);
+ for(const r of overdue)alertLine('مراجعة تحصيل متأخرة · '+driverLabel(r.driver_id)+' · '+r.order_id+' · '+egp(r.amount_cents)+' ج.م',true);
+ if(![...f.balances.values()].some(v=>v>0)&&!overdueApproved.length&&!overdue.length)alertLine('لا توجد تنبيهات مالية حالياً');
+ if(end)alertLine('تنبيه: الأرصدة محسوبة حتى '+end+'، لكن أعمار التأخير محسوبة حتى الوقت الحالي.');
  const body=el('driverPerformance');body.replaceChildren();
  const drivers=[...new Set(orders.map(o=>o['Driver ID']).filter(Boolean))].sort();
  for(const id of drivers){const mine=orders.filter(o=>o['Driver ID']===id),delivered=mine.filter(o=>shippingStatus(o)==='Delivered').length,returned=mine.filter(o=>shippingStatus(o)==='Returned').length,failed=mine.filter(o=>shippingStatus(o)==='Delivery failed').length;
