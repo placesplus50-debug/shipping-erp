@@ -81,6 +81,30 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
 .driver-filter-actions button{font-size:12px}
 .driver-network{background:#fff1d9;color:#69440a;border:1px solid #e6bd78;border-radius:12px;padding:12px 15px;margin:0 0 16px;font-weight:700}
 @media(max-width:480px){.driver-summary{gap:7px}.driver-summary>div{padding:10px}.driver-summary span{font-size:11px}}
+</style><style>
+/* Driver mobile ergonomics: larger tap targets, compact cards, safe viewport */
+@media(max-width:650px){
+ body.sp-app{padding-bottom:calc(68px + env(safe-area-inset-bottom))}
+ .driver-view{width:100%;max-width:100%;overflow-x:clip}
+ .driver-view-title{font-size:19px;line-height:1.5;margin-bottom:10px}
+ .driver-view-note{line-height:1.85;font-size:12px}
+ .driver-bottom-nav{padding-inline:4px;gap:3px}
+ .driver-bottom-nav a{min-height:51px;touch-action:manipulation}
+ .driver-shortcut{border-radius:13px;line-height:1.5}
+ .driver-view .toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+ .driver-view .toolbar input,.driver-view .toolbar select{width:100%;min-width:0;min-height:47px;font-size:15px}
+ .driver-view .location-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .driver-view .location-toolbar button{min-width:0;min-height:49px;font-size:12px;line-height:1.5;padding:8px}
+ .driver-view .inmap-panel{max-width:100%;overflow:hidden;padding:13px}
+ .driver-view .inmap-head{gap:10px;align-items:start}
+ .driver-view .inmap-head strong{font-size:14px;line-height:1.5}
+ .driver-view .inmap-head button{flex:0 0 44px;min-height:44px}
+ .driver-view .inmap-map{height:min(52vh,330px);min-height:220px}
+ .driver-view .orders{min-width:0}
+ .driver-view .orders>*{max-width:100%}
+ .driver-view .stat{min-width:0}
+ .driver-view .stat strong{overflow-wrap:anywhere}
+}
 </style></head><body class="sp-app sp-page-driver" data-page="driver"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav" href="/collections.html" data-staff><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a><a class="sp-nav active" href="#overview" data-driver-section="overview" aria-current="page"><span aria-hidden="true">⌂</span>الرئيسية</a><a class="sp-nav" href="#shipments" data-driver-section="shipments"><span aria-hidden="true">▦</span>شحناتي</a><a class="sp-nav" href="#route" data-driver-section="route"><span aria-hidden="true">⌖</span>خط السير والخريطة</a><a class="sp-nav" href="#collections" data-driver-section="collections"><span aria-hidden="true">▤</span>التحصيلات</a><a class="sp-nav" href="/system-check.html" id="systemCheckNav" data-staff hidden><span aria-hidden="true">✓</span>فحص النظام</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Production</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / شحناتي</small><h1>شحناتي</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog>
 
 <main id="spMain" tabindex="-1"><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
