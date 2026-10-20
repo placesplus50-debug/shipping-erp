@@ -71,6 +71,6 @@ export async function onRequestPost({request,env}){
  if(!sameOrigin(request))return reply({error:"Invalid origin"},403);
  if(env.SHEETS_SYNC_ENABLED!=="true")return reply({error:"Sync not enabled"},409);
  const result=await dispatchPending(env);
- return reply({...result,mode:"manual_preview_dispatch"});
+ return reply({...result,mode:"manual_dispatch"});
  }catch{return safeError()}
 }
