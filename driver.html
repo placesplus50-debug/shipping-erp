@@ -41,22 +41,19 @@ function remaining(o){const due=Math.round((Number(String(o['COD Due']||0).repla
 // Navigation is read-only. Precise coordinates are preferred; a city is never treated as a precise pin.
 function preciseLocation(order){
  const raw=String(order['Google Maps URL']||order['Maps URL']||order['Location URL']||order['Customer Location']||'').trim();
- const lat=Number(order.Latitude??order.latitude),lng=Number(order.Longitude??order.longitude);
+ const coordinate=s=>{const m=String(s||'').match(/^(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)$/);return m&&Math.abs(+m[1])<=90&&Math.abs(+m[2])<=180?m[1]+','+m[2]:null};
  if(raw){
-  if(/^[-+]?\\d{1,2}\\.\\d+\\s*,\\s*[-+]?\\d{1,3}\\.\\d+$/.test(raw)){const [a,b]=raw.split(',').map(Number);if(Math.abs(a)<=90&&Math.abs(b)<=180)return a+','+b}
+  const coords=coordinate(raw);if(coords)return coords;
   try{
    const u=new URL(raw);
-   if(u.protocol!=='https:'||!/(^|\\.)(google\\.[a-z.]+|goo\\.gl|maps\\.app\\.goo\\.gl)$/.test(u.hostname))return null;
-   for(const candidate of [u.searchParams.get('query'),u.searchParams.get('q'),u.searchParams.get('ll'),decodeURIComponent(u.pathname.match(/@(-?\\d+\\.\\d+,-?\\d+\\.\\d+)/)?.[1]||'')]){
-    const m=String(candidate||'').match(/^(-?\\d+(?:\\.\\d+)?),\\s*(-?\\d+(?:\\.\\d+)?)$/);
-    if(m&&Math.abs(+m[1])<=90&&Math.abs(+m[2])<=180)return m[1]+','+m[2];
-   }
-   // Google Maps place links and short links can resolve to an exact place in Maps.
+   if(u.protocol!=='https:'||!(/(^|\.)google\.[a-z.]+$/.test(u.hostname)||['goo.gl','maps.app.goo.gl'].includes(u.hostname)))return null;
+   for(const s of [u.searchParams.get('query'),u.searchParams.get('q'),u.searchParams.get('ll'),u.pathname.match(/@(-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?)/)?.[1]]){const found=coordinate(s);if(found)return found}
    return raw;
   }catch{return null}
  }
- if(Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180&&(lat!==0||lng!==0))return lat+','+lng;
- return null;
+ const latitude=order.Latitude??order.latitude,longitude=order.Longitude??order.longitude;
+ if(latitude===undefined||longitude===undefined||String(latitude).trim()===''||String(longitude).trim()==='')return null;
+ return coordinate(String(latitude)+','+String(longitude));
 }
 function mapLink(order){
  const target=preciseLocation(order)||String(order['Address']||order['Full Address']||order['City / Area']||'').trim();
