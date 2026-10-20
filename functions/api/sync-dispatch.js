@@ -146,6 +146,47 @@ export async function onRequestGet({request,env}){
    if(count===0)inspection.reconciliation.missingCollections.push({id:key,orderId:e.order_id,driverId:e.driver_id,amount:e.amount_cents/100});
    if(count>1)inspection.reconciliation.duplicateCollections.push({id:key,count});
   }
+  // Read-only cross-checks: compare current D1 status and follow-ups against Sheets.
+  inspection.reconciliation.statusMismatches=[];
+  inspection.reconciliation.missingFollowups=[];
+  inspection.reconciliation.duplicateFollowups=[];
+  inspection.reconciliation.followupMismatches=[];
+  const orderSheet=await sheets(token,"ORDERS!A1:K");
+  const orderRows=orderSheet.values||[];
+  const orderIdIndex=(orderRows[0]||[]).indexOf("Order ID");
+  const statusIndex=(orderRows[0]||[]).indexOf("Shipping Status");
+  if(orderIdIndex<0||statusIndex<0)throw Error("orders_header_mismatch");
+  const ordersById=new Map();
+  for(const row of orderRows.slice(1)){
+   const id=row[orderIdIndex];
+   if(!id)continue;
+   if(!ordersById.has(id))ordersById.set(id,[]);
+   ordersById.get(id).push(row[statusIndex]||"");
+  }
+  const statusEvents=await env.DB.prepare("SELECT order_id,new_status FROM driver_status_events ORDER BY id DESC LIMIT 5000").all();
+  const latestStatuses=new Map();
+  for(const event of statusEvents.results||[])if(!latestStatuses.has(event.order_id))latestStatuses.set(event.order_id,event.new_status);
+  inspection.reconciliation.checkedStatusEvents=latestStatuses.size;
+  inspection.reconciliation.statusEventsTruncated=(statusEvents.results||[]).length===5000;
+  for(const [id,expected] of latestStatuses){
+   const actual=ordersById.get(id)||[];
+   if(actual.length!==1||actual[0]!==expected)inspection.reconciliation.statusMismatches.push({orderId:id,d1Status:expected,sheetStatus:actual.length===1?actual[0]:null,sheetMatches:actual.length});
+  }
+  const followSheet=await sheets(token,"FOLLOWUPS!A1:H");
+  const followRows=(followSheet.values||[]).slice(1);
+  const followById=new Map();
+  for(const row of followRows){if(!row[0])continue;if(!followById.has(row[0]))followById.set(row[0],[]);followById.get(row[0]).push(row)}
+  const followRecords=await env.DB.prepare("SELECT order_id,driver_id,reason,attempt_count,action_required FROM delivery_followups ORDER BY order_id LIMIT 2000").all();
+  inspection.reconciliation.checkedFollowups=(followRecords.results||[]).length;
+  inspection.reconciliation.followupsTruncated=(followRecords.results||[]).length===2000;
+  for(const f of followRecords.results||[]){
+   const rows=followById.get(f.order_id)||[];
+   if(!rows.length){inspection.reconciliation.missingFollowups.push(f.order_id);continue}
+   if(rows.length>1){inspection.reconciliation.duplicateFollowups.push({orderId:f.order_id,count:rows.length});continue}
+   const r=rows[0],expectedStatus=latestStatuses.get(f.order_id)||(ordersById.get(f.order_id)||[])[0]||"";
+   if(r[1]!==f.driver_id||r[2]!==f.reason||Number(r[3])!==Number(f.attempt_count)||r[4]!==f.action_required||r[7]!==expectedStatus)
+    inspection.reconciliation.followupMismatches.push({orderId:f.order_id,driverMismatch:r[1]!==f.driver_id,reasonMismatch:r[2]!==f.reason,attemptsMismatch:Number(r[3])!==Number(f.attempt_count),actionMismatch:r[4]!==f.action_required,statusMismatch:r[7]!==expectedStatus});
+  }
   const {results}=await env.DB.prepare("SELECT * FROM sheet_sync_outbox WHERE state!='sent' ORDER BY id LIMIT 20").all();
   for(const item of results||[]){
    let row=null,error=null;
