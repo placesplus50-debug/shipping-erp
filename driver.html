@@ -124,16 +124,18 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
  main.prepend(network);
  const updateNetwork=()=>{network.hidden=navigator.onLine!==false};
  window.addEventListener('online',()=>{updateNetwork();el('reload')?.click()});window.addEventListener('offline',updateNetwork);updateNetwork();
+ const routeHelp=document.createElement('p');routeHelp.className='driver-view-note';routeHelp.textContent='ابدأ بترتيب المحطات، ثم افتح مسار الشحنات. مشاركة موقعك مع الإدارة اختيارية، ويمكن إيقافها في أي وقت.';views.route.insertBefore(routeHelp,views.route.children[1]||null);
  const collectionInfo=document.createElement('div');collectionInfo.className='notice';collectionInfo.textContent='يمكنك تسجيل تحصيل كل شحنة من قسم شحناتي. المبالغ المعروضة هنا للمتابعة فقط، والاعتماد يتم من الحسابات.';
  views.collections.append(collectionInfo);
  const amount=document.createElement('div');amount.className='stat';amount.innerHTML='<small>المتبقي غير المسجل للتحصيل</small><strong id="driverCollectionTotal">—</strong>';views.collections.append(amount);
+ const collectionHelp=document.createElement('p');collectionHelp.className='driver-view-note';collectionHelp.textContent='المبلغ المعروض تقديري للشحنات المسندة إليك، وليس اعتمادًا ماليًا نهائيًا. مراجعة التحصيلات واعتمادها تتم من الحسابات.';views.collections.append(collectionHelp);
  const collectionLink=document.createElement('a');collectionLink.className='driver-shortcut';collectionLink.href='#shipments';collectionLink.dataset.driverSection='shipments';collectionLink.textContent='فتح شحناتي لتسجيل التحصيل';views.collections.append(collectionLink);
  const cod=el('cod');if(cod)new MutationObserver(()=>{el('driverCollectionTotal').textContent=cod.textContent}).observe(cod,{childList:true,characterData:true,subtree:true});
  function show(){
   const requested=location.hash.slice(1);const selected=views[requested]?requested:'overview';
   Object.entries(views).forEach(([id,node])=>node.hidden=id!==selected);
   document.querySelectorAll('[data-driver-section]').forEach(a=>{const active=a.dataset.driverSection===selected;a.classList.toggle('active',active);if(a.classList.contains('sp-nav')){if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')}});
-  if(selected==='route')setTimeout(()=>{window.dispatchEvent(new Event('resize'))},100);
+  if(selected==='route')setTimeout(()=>{window.dispatchEvent(new Event('resize'));document.dispatchEvent(new Event('driver-route-visible'))},180);
   window.scrollTo(0,0);
  }
  document.querySelectorAll('.sp-nav[data-driver-section]').forEach(a=>a.addEventListener('click',()=>{document.body.classList.remove('sp-menu-open');const shade=el('spShade');if(shade)shade.hidden=true;el('spMenu')?.setAttribute('aria-expanded','false')}));
