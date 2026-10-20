@@ -77,3 +77,33 @@ body.sp-app{margin:0;padding:0 var(--sp-side) 0 0;background:var(--sp-bg);color:
  .sp-app :is(.tablewrap,.table-scroll,.scroll){overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x pan-y}
  .sp-app :is(.metric,.stat,.card) :is(strong,.value,.amount){font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 }
+
+
+/* Shipping Pulse 2.0 — owner-approved purple/lime design tokens.
+   Visual-only progressive enhancement; no business logic or data mutations. */
+:root{
+ --sp-v2-ink:#281540;
+ --sp-v2-deep:#24133e;
+ --sp-v2-deep-2:#3a205a;
+ --sp-v2-purple:#5b3fc0;
+ --sp-v2-lime:#d4ed75;
+ --sp-v2-surface:#fff;
+ --sp-v2-canvas:#f7f5fc;
+ --sp-v2-border:#e9e2f2;
+ --sp-v2-radius:18px;
+ --sp-v2-shadow:0 8px 26px rgba(45,23,78,.075);
+}
+body.sp-app{background:var(--sp-v2-canvas);color:var(--sp-v2-ink)}
+.sp-app .sp-sidebar{background:linear-gradient(175deg,#25143f 0%,#341a56 54%,#1e1138 100%)}
+.sp-app .sp-brand{letter-spacing:-.015em}
+.sp-app button,.sp-app select,.sp-app input,.sp-app textarea{font-family:Cairo,Tahoma,Arial,sans-serif}
+.sp-app :is(button,a,input,select,textarea):focus-visible{outline:3px solid #a28add;outline-offset:3px}
+.sp-app :is(.card,.stat,.panel,.tile){border-radius:var(--sp-v2-radius);box-shadow:var(--sp-v2-shadow)}
+.sp-app :is(.card,.panel){border-color:var(--sp-v2-border)}
+.sp-app :is(button,.btn){transition:background-color .15s ease,box-shadow .15s ease,transform .15s ease}
+.sp-app :is(button,.btn):active{transform:scale(.985)}
+@media(max-width:650px){
+ .sp-app main,.sp-app main.wrap{padding-inline:14px}
+ .sp-app :is(.card,.panel){border-radius:17px}
+}
+@media(prefers-reduced-motion:reduce){.sp-app :is(button,.btn){transition:none}}
