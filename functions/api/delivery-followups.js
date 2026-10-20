@@ -31,7 +31,8 @@ export async function onRequestPost({request,env,waitUntil}){
   if(!["Returned","Delivery failed","Out for delivery"].includes(status))return reply({error:"Follow-up allowed only for returned, failed or active delivery orders"},409);
   const save=env.DB.prepare("INSERT INTO delivery_followups(order_id,driver_id,reason,action_required,attempt_count,updated_by) VALUES(?,?,?,?,?,?) ON CONFLICT(order_id) DO UPDATE SET driver_id=excluded.driver_id,reason=excluded.reason,action_required=excluded.action_required,attempt_count=excluded.attempt_count,updated_by=excluded.updated_by,updated_at=CURRENT_TIMESTAMP").bind(b.orderId,order["Driver ID"],b.reason.trim(),b.actionRequired,b.attemptCount,user.id);
   const queue=env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) VALUES('followup',(SELECT COALESCE(MAX(event_id),0)+1 FROM sheet_sync_outbox WHERE event_type='followup'),'FOLLOWUPS',json_object('orderId',?,'shippingStatus',?))").bind(b.orderId,status);
-  await env.DB.batch([save,queue]);
+  const audit=env.DB.prepare("INSERT INTO audit_logs(user_id,action,entity_type,entity_id,details) VALUES(?,'followup.save','order',?,json_object('action',?,'attempts',?,'reason',?))").bind(user.id,b.orderId,b.actionRequired,b.attemptCount,b.reason.trim());
+  await env.DB.batch([save,queue,audit]);
   if(env.SHEETS_SYNC_ENABLED==="true"&&typeof waitUntil==="function")waitUntil(dispatchPending(env).catch(()=>{}));
   return reply({ok:true,orderId:b.orderId,driverId:order["Driver ID"],sheetSync:"queued"});
  }catch{return reply({error:"Unable to save follow-up; verify D1 migration 0005"},503)}
