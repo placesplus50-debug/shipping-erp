@@ -36,7 +36,7 @@ export async function onRequestPost({request,env,waitUntil}){
   const [inserted]=await env.DB.batch([eventInsert,queued]);
   if(!inserted.meta?.changes)return reply({error:"Shipment status changed; refresh and retry"},409);
   if(env.SHEETS_SYNC_ENABLED==="true"&&typeof waitUntil==='function')waitUntil(dispatchPending(env).catch(()=>{}));
-  return reply({ok:true,orderId,previousStatus:previous,status,storage:"preview_d1",googleSheetsModified:false},201);
+  return reply({ok:true,orderId,previousStatus:previous,status,storage:"d1",googleSheetsModified:false},201);
  }catch(e){return safeError()}
 }
 export const onRequestGet=()=>reply({error:"Method not allowed"},405);
