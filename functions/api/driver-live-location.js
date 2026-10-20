@@ -6,7 +6,7 @@ export async function onRequestGet({request,env}){
  if(!actor)return reply({error:"Authentication required"},401);
  if(!adminRoles.has(actor.role))return reply({error:"Forbidden"},403);
  try{
-  const rows=await env.DB.prepare("SELECT driver_id,latitude,longitude,accuracy_m,updated_at FROM driver_live_locations WHERE updated_at >= datetime('now','-24 hours') ORDER BY updated_at DESC LIMIT 250").all();
+  const rows=await env.DB.prepare("SELECT driver_id,latitude,longitude,accuracy_m,updated_at FROM driver_live_locations WHERE julianday(updated_at) >= julianday('now','-24 hours') ORDER BY updated_at DESC LIMIT 250").all();
   return reply({locations:(rows.results||[]).map(r=>({...r,online:Date.now()-Date.parse(r.updated_at)<120000}))});
  }catch{return reply({error:"Location storage not ready; apply D1 migration"},503)}
 }
