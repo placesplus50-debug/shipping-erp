@@ -38,6 +38,7 @@ const $=id=>document.getElementById(id);let orders=[],claims=[],historyComplete=
 function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
 function node(tag,cls,txt){const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el}
 function remaining(o){const due=Math.round((Number(String(o['COD Due']||0).replace(/,/g,''))||0)*100);const claimed=claims.filter(c=>c.order_id===o['Order ID']&&c.decision!=='rejected').reduce((n,c)=>n+c.amount_cents,0);return Math.max(0,due-claimed)/100}
+function mapLink(order){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(order['City / Area']||'')}
 function render(){
  const q=$('search').value.trim().toLowerCase(),f=$('filter').value;
  const visible=orders.filter(o=>(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
