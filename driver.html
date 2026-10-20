@@ -394,6 +394,28 @@ body.sp-page-driver .sp-card-action-dialog button.sp-action-close{background:#ff
 body.sp-page-driver .driver-bottom-nav a.active{background:#ffffff12!important;color:#d5f26c!important}
 }
 @media(max-width:380px){body.sp-page-driver #orders .card{grid-template-columns:65px minmax(0,1fr) 67px 24px!important;gap:3px 4px!important}}
+</style><style id="sp-icons-and-details-polish">
+@media(max-width:900px){
+body.sp-page-driver .driver-bottom-nav{direction:rtl!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;align-items:stretch!important}
+body.sp-page-driver .driver-bottom-nav a{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;min-width:0!important;padding:6px 3px!important;text-decoration:none!important}
+body.sp-page-driver .driver-bottom-nav .sp-nav-icon{width:23px!important;height:23px!important;stroke:currentColor!important;stroke-width:1.8!important;fill:none!important;stroke-linecap:round!important;stroke-linejoin:round!important;display:block!important}
+body.sp-page-driver .driver-bottom-nav a.active .sp-nav-icon{stroke:#d5f26c!important}
+body.sp-page-driver .driver-bottom-nav a.active:before{content:"";position:absolute;top:5px;width:38px;height:2px;background:#d5f26c;border-radius:5px}
+body.sp-page-driver .sp-mock-kpi .k-icon{font-size:0!important;display:grid!important;place-items:center!important}
+body.sp-page-driver .sp-mock-kpi .k-icon svg{width:17px;height:17px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+body.sp-page-driver .sp-mock-panel span svg{width:16px;height:16px;vertical-align:middle;margin-left:3px;stroke:currentColor;stroke-width:1.7;fill:none}
+body.sp-page-driver #orders .card{border-top:1px solid #f0edf5!important;border-right:1px solid #f0edf5!important;border-bottom:1px solid #f0edf5!important;transition:box-shadow .18s ease!important}
+body.sp-page-driver #orders .card:focus-within{box-shadow:0 5px 18px #51358b22!important}
+body.sp-page-driver #orders .card .status{font-weight:800!important;letter-spacing:0!important}
+body.sp-page-driver #orders .card .map-link{display:grid!important;place-items:center!important;background:#ece7f9!important;color:#5836af!important}
+body.sp-page-driver #orders .card .map-link:after{content:"›";font-size:24px!important;font-weight:800}
+body.sp-page-driver #orders .card .sp-card-actions summary{display:grid!important;place-items:center!important;background:transparent!important;color:#4d337d!important;font-size:20px!important}
+body.sp-page-driver #orders .card .note{color:#857b92!important}
+body.sp-page-driver .driver-quick-filters button{font-weight:700!important}
+body.sp-page-driver .driver-quick-filters button span:first-child{font-size:13px!important}
+body.sp-page-driver .sp-mock-cod-panel strong{color:#d6ee73!important}
+body.sp-page-driver .sp-mock-route-panel strong{color:#fff!important}
+}
 </style></head><body class="sp-app sp-page-driver" data-page="driver"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav" href="/collections.html" data-staff><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a><a class="sp-nav active" href="#overview" data-driver-section="overview" aria-current="page"><span aria-hidden="true">⌂</span>الرئيسية</a><a class="sp-nav" href="#shipments" data-driver-section="shipments"><span aria-hidden="true">▦</span>شحناتي</a><a class="sp-nav" href="#route" data-driver-section="route"><span aria-hidden="true">⌖</span>خط السير والخريطة</a><a class="sp-nav" href="#collections" data-driver-section="collections"><span aria-hidden="true">▤</span>التحصيلات</a><a class="sp-nav" href="/system-check.html" id="systemCheckNav" data-staff hidden><span aria-hidden="true">✓</span>فحص النظام</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Production</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / شحناتي</small><h1>شحناتي</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog>
 
 <main id="spMain" tabindex="-1"><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
@@ -956,5 +978,26 @@ document.body.append(backdrop);document.body.style.overflow='hidden';overlay=bac
 },true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 window.addEventListener('hashchange',close);
+})();
+</script><script id="sp-vector-icons-and-details">
+(function(){
+const ns='http://www.w3.org/2000/svg';
+const paths={
+home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+shipments:'<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+route:'<path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16M15 5v16"/>',
+collections:'<rect x="3" y="6" width="18" height="15" rx="3"/><path d="M3 10V5a2 2 0 0 1 2-2h12M15 14h6M15 17h6"/>',
+box:'<path d="m3 7 9-4 9 4v11l-9 4-9-4zM3 7l9 5 9-5M12 12v10"/>',
+check:'<circle cx="12" cy="12" r="9"/><path d="m7 12 3 3 7-7"/>',
+truck:'<path d="M3 6h11v11H3zM14 10h4l3 4v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',
+return:'<path d="M4 10a8 8 0 1 1 2 7M4 4v6h6"/>',
+wallet:'<rect x="3" y="6" width="18" height="15" rx="3"/><path d="M3 9V5a2 2 0 0 1 2-2h12M15 14h6v4h-6a2 2 0 0 1 0-4z"/>'
+};
+function svg(key,cls){const s=document.createElementNS(ns,'svg');s.setAttribute('viewBox','0 0 24 24');s.setAttribute('aria-hidden','true');if(cls)s.setAttribute('class',cls);s.innerHTML=paths[key]||paths.box;return s}
+const nav=document.querySelector('.driver-bottom-nav');
+if(nav)for(const a of nav.querySelectorAll('a')){const key=a.dataset.driverSection;const label=a.querySelector('span');if(!label)continue;for(const n of [...a.childNodes])if(n!==label)n.remove();a.insertBefore(svg(key==='overview'?'home':key,'sp-nav-icon'),label)}
+const keys=['box','check','truck','return'];document.querySelectorAll('.sp-mock-kpi .k-icon').forEach((el,i)=>{el.replaceChildren(svg(keys[i]||'box'))});
+document.querySelectorAll('.sp-mock-panel').forEach((el,i)=>{const label=el.querySelector('span');if(!label)return;label.textContent=i===0?'خط السير اليوم':'قيمة التحصيل اليوم';label.prepend(svg(i===0?'route':'wallet'))});
+const money=document.getElementById('mockCod');if(money)money.setAttribute('aria-label','ملخص التحصيل بحسب السجلات');
 })();
 </script></body></html>
