@@ -43,6 +43,16 @@ export async function deliver(env,token,item){
  const existing=await sheets(token,tab+"!A1:"+last);
  if(JSON.stringify(existing.values?.[0]||[])!==JSON.stringify(headers[tab]))throw Error("header_mismatch");
  const row=await rowFor(env,item),matches=[];
+ if(tab==="FOLLOWUPS"){
+  const orders=await sheets(token,"ORDERS!A1:K");
+  const values=orders.values||[];
+  const idColumn=(values[0]||[]).indexOf("Order ID");
+  const statusColumn=(values[0]||[]).indexOf("Shipping Status");
+  if(idColumn<0||statusColumn<0)throw Error("orders_header_mismatch");
+  const found=values.slice(1).filter(r=>r[idColumn]===row[0]);
+  if(found.length!==1)throw Error(found.length?"duplicate_order_id":"order_not_found_in_sheet");
+  row[7]=found[0][statusColumn]||"";
+ }
  for(let i=1;i<(existing.values||[]).length;i++)if(existing.values[i]?.[0]===row[0])matches.push(i+1);
  if(matches.length>1)throw Error("duplicate_sheet_id");
  if(matches.length)await sheets(token,tab+"!A"+matches[0]+":"+last+matches[0],"PUT",row);
