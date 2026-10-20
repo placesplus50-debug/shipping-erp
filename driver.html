@@ -374,6 +374,26 @@ body.sp-page-driver #orders .card>.note{font-size:10px!important;white-space:now
 body.sp-page-driver #orders .card .details span:first-child{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
 body.sp-page-driver #orders .card .money{font-size:10px!important;overflow-wrap:normal!important;word-break:normal!important}
 }
+</style><style id="sp-driver-finish-pass">
+@media(max-width:900px){
+body.sp-page-driver #orders .card{grid-template-columns:72px minmax(0,1fr) 79px 28px!important;gap:3px 6px!important;padding:10px 9px!important;min-height:91px!important;overflow:hidden!important}
+body.sp-page-driver #orders .card .cardtop>div{min-width:0!important}
+body.sp-page-driver #orders .card .cardtop h2{font-size:12px!important;overflow:hidden!important;text-overflow:ellipsis!important}
+body.sp-page-driver #orders .card .cardtop .note{font-size:10px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+body.sp-page-driver #orders .card .details{overflow:hidden!important}
+body.sp-page-driver #orders .card .money{font-size:10px!important;line-height:1.45!important;white-space:normal!important;overflow-wrap:anywhere!important;text-align:center!important}
+body.sp-page-driver #orders .card .status{font-size:9px!important}
+body.sp-page-driver #orders .card>.note{color:#948b9e!important;margin-top:2px!important}
+body.sp-page-driver #orders .card .sp-card-actions summary{border-radius:50%!important;background:#eee9fb!important;font-size:20px!important;width:27px!important;height:27px!important}
+body.sp-page-driver #orders .card .sp-card-action-menu{display:none!important}
+body.sp-page-driver .sp-card-action-sheet{position:fixed!important;inset:0!important;z-index:99999!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;background:#1e123a80!important;padding:12px!important;padding-bottom:max(15px,env(safe-area-inset-bottom))!important;box-sizing:border-box!important}
+body.sp-page-driver .sp-card-action-dialog{background:#fff!important;color:#291a48!important;width:min(100%,460px)!important;max-height:70vh!important;overflow-y:auto!important;border-radius:22px!important;box-shadow:0 20px 60px #160e3055!important;padding:17px!important;box-sizing:border-box!important;display:grid!important;gap:10px!important}
+body.sp-page-driver .sp-card-action-dialog h3{margin:0 0 5px!important;font-size:17px!important}
+body.sp-page-driver .sp-card-action-dialog button{display:block!important;width:100%!important;min-height:48px!important;background:#f0ebfc!important;color:#3e246c!important;border:1px solid #e5dcf5!important;border-radius:12px!important;padding:10px!important;font-size:13px!important;font-weight:700!important;white-space:normal!important}
+body.sp-page-driver .sp-card-action-dialog button.sp-action-close{background:#fff!important;border-color:#ded6eb!important;color:#746984!important}
+body.sp-page-driver .driver-bottom-nav a.active{background:#ffffff12!important;color:#d5f26c!important}
+}
+@media(max-width:380px){body.sp-page-driver #orders .card{grid-template-columns:65px minmax(0,1fr) 67px 24px!important;gap:3px 4px!important}}
 </style></head><body class="sp-app sp-page-driver" data-page="driver"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav" href="/collections.html" data-staff><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a><a class="sp-nav active" href="#overview" data-driver-section="overview" aria-current="page"><span aria-hidden="true">⌂</span>الرئيسية</a><a class="sp-nav" href="#shipments" data-driver-section="shipments"><span aria-hidden="true">▦</span>شحناتي</a><a class="sp-nav" href="#route" data-driver-section="route"><span aria-hidden="true">⌖</span>خط السير والخريطة</a><a class="sp-nav" href="#collections" data-driver-section="collections"><span aria-hidden="true">▤</span>التحصيلات</a><a class="sp-nav" href="/system-check.html" id="systemCheckNav" data-staff hidden><span aria-hidden="true">✓</span>فحص النظام</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Production</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / شحناتي</small><h1>شحناتي</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog>
 
 <main id="spMain" tabindex="-1"><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
@@ -893,7 +913,7 @@ function enhanceCards(){
 if(!list)return;
 for(const card of list.querySelectorAll('.card')){
 const status=card.querySelector('.status');if(status&&!status.dataset.refined){const text=status.textContent.trim().toLowerCase();status.dataset.refined='1';status.textContent=/returned|return|مرتجع|مرتد/.test(text)?'Returned\nمرتجع':/delivered|تم التسليم|تم التوصيل/.test(text)?'Delivered\nتم التسليم':'In Progress\nقيد التوصيل';status.style.whiteSpace='pre-line'}
-const money=card.querySelector('.money');if(money&&!money.dataset.refined){money.dataset.refined='1';const raw=money.textContent;const amount=raw.match(/[\d٠-٩][\d٠-٩,٬.٫]*/);if(amount&&!/مرتجع|تعذر التسليم/.test(raw))money.textContent='COD 💵\n'+amount[0]+' ج.م';money.style.whiteSpace='pre-line'}
+
 }
 }
 if(list)new MutationObserver(enhanceCards).observe(list,{childList:true});enhanceCards();
@@ -913,5 +933,28 @@ details.style.setProperty('--sp-menu-left',left+'px');details.style.setProperty(
 });
 document.addEventListener('click',e=>{if(e.target.closest('details.sp-card-actions'))return;for(const d of root.querySelectorAll('details.sp-card-actions[open]'))d.open=false});
 window.addEventListener('scroll',()=>{for(const d of root.querySelectorAll('details.sp-card-actions[open]'))d.open=false},{passive:true});
+})();
+</script><script id="sp-driver-action-sheet">
+(function(){
+const root=document.getElementById('orders');if(!root)return;
+let overlay=null;
+function close(){if(!overlay)return;const menu=overlay._sourceMenu;if(menu){for(const btn of [...overlay.querySelectorAll('.sp-card-action-dialog .sp-card-action-option')])menu.append(btn)}overlay.remove();overlay=null;document.body.style.overflow=''}
+root.addEventListener('click',function(e){
+const trigger=e.target.closest('details.sp-card-actions > summary');if(!trigger)return;
+e.preventDefault();e.stopImmediatePropagation();
+close();
+const details=trigger.parentElement,menu=details.querySelector('.sp-card-action-menu');if(!menu)return;
+details.open=false;
+const card=trigger.closest('.card'),id=card?.querySelector('.cardtop h2')?.textContent||'الشحنة';
+const backdrop=document.createElement('div');backdrop.className='sp-card-action-sheet';backdrop.setAttribute('role','presentation');
+const dialog=document.createElement('section');dialog.className='sp-card-action-dialog';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','تغيير حالة '+id);
+const title=document.createElement('h3');title.textContent='تحديث حالة '+id;dialog.append(title);
+for(const button of [...menu.querySelectorAll('button')]){button.classList.add('sp-card-action-option');button.addEventListener('click',close,{once:true});dialog.append(button)}
+const cancel=document.createElement('button');cancel.className='sp-action-close';cancel.type='button';cancel.textContent='إلغاء';cancel.onclick=close;dialog.append(cancel);
+backdrop.append(dialog);backdrop._sourceMenu=menu;backdrop.addEventListener('click',event=>{if(event.target===backdrop)close()});
+document.body.append(backdrop);document.body.style.overflow='hidden';overlay=backdrop;cancel.focus();
+},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+window.addEventListener('hashchange',close);
 })();
 </script></body></html>
