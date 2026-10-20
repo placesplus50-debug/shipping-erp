@@ -82,12 +82,24 @@ export async function onRequestGet({request,env}){
   if(!user)return reply({error:"Authentication required"},401);
   if(!["super_admin","admin"].includes(user.role))return reply({error:"Admin only"},403);
   const token=await getAccessToken(env);
-  const inspection={enabled:env.SHEETS_SYNC_ENABLED==="true",readOnly:true,tabs:{},pending:[]};
+  const inspection={enabled:env.SHEETS_SYNC_ENABLED==="true",readOnly:true,tabs:{},pending:[],reconciliation:{missingCollections:[],duplicateCollections:[],checkedCollections:0}};
   for(const tab of ["TRACKING","COLLECTIONS"]){
    const sheet=await sheets(token,tab+"!A1:J");
    const values=sheet.values||[];
    const headerMatch=JSON.stringify(values[0]||[])===JSON.stringify(headers[tab]);
    inspection.tabs[tab]={headerMatch,existingRows:Math.max(0,values.length-1)};
+  }
+  const collectionSheet=await sheets(token,"COLLECTIONS!A1:A");
+  const sheetIds=(collectionSheet.values||[]).slice(1).map(r=>String(r[0]||""));
+  const sheetCounts=new Map();
+  for(const id of sheetIds)if(/^COL-[1-9][0-9]*$/.test(id))sheetCounts.set(id,(sheetCounts.get(id)||0)+1);
+  const saved=await env.DB.prepare("SELECT id,order_id,driver_id,amount_cents FROM collection_events ORDER BY id LIMIT 2000").all();
+  inspection.reconciliation.checkedCollections=(saved.results||[]).length;
+  inspection.reconciliation.truncated=(saved.results||[]).length===2000;
+  for(const e of saved.results||[]){
+   const key="COL-"+e.id,count=sheetCounts.get(key)||0;
+   if(count===0)inspection.reconciliation.missingCollections.push({id:key,orderId:e.order_id,driverId:e.driver_id,amount:e.amount_cents/100});
+   if(count>1)inspection.reconciliation.duplicateCollections.push({id:key,count});
   }
   const {results}=await env.DB.prepare("SELECT * FROM sheet_sync_outbox WHERE state!='sent' ORDER BY id LIMIT 20").all();
   for(const item of results||[]){
