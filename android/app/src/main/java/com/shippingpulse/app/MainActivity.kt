@@ -63,7 +63,7 @@ class MainActivity : Activity() {
                 Thread {
                     try {
                         val cookie = CookieManager.getInstance().getCookie(base) ?: ""
-                        val conn = URL(base + "api/auth").openConnection() as HttpURLConnection
+                        val conn = URL(base + "api/auth/me").openConnection() as HttpURLConnection
                         conn.setRequestProperty("Cookie", cookie)
                         conn.connectTimeout = 10000
                         conn.readTimeout = 10000
