@@ -53,7 +53,7 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
 <div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي غير المسجل للتحصيل</small><strong id="cod">—</strong></div></div>
 <div class="notice">مرحلة اختبار: البيانات تُقرأ مباشرة من Google Sheets. تغيير الحالة وتسجيل التحصيل يُحفظان في D1 وتُرسل تحديثاتهما إلى Google Sheets عند تفعيل المزامنة.</div>
 <div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
-<div class="location-toolbar"><button type="button" id="sortByLocation">📍 رتّب حسب موقعي</button> <button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يرتب الشحنات بإحداثيات GPS تقريبياً ويعرض قائمة المحطات مع زر ملاحة لكل شحنة. الموقع يُطلب مرة واحدة ولا يُحفظ. رابط Google Maps يعرض أول 9 محطات فقط.</p><div id="message" role="status" aria-live="polite"></div><section id="insideMapPanel" class="inmap-panel" hidden><div class="inmap-head"><strong>🗺️ خريطة الشحنة داخل Shipping Pulse</strong><button type="button" id="insideMapClose">✕</button></div><p id="insideMapStatus">الخريطة للعرض؛ تعليمات القيادة متاحة في Google Maps.</p><div id="insideMap" class="inmap-map"></div><div class="inmap-actions"><button type="button" id="insideMapFollow">📍 متابعة موقعي</button><button type="button" id="insideMapStop">إيقاف المتابعة</button><a id="insideMapExternal" class="map-link" target="_blank" rel="noopener noreferrer">🚗 فتح Google Maps</a></div></section><section id="routePlan" hidden></section><section id="orders" class="orders"></section></main>
+<div class="location-toolbar"><button type="button" id="sortByLocation">📍 رتّب حسب موقعي</button> <button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يرتب الشحنات بإحداثيات GPS تقريبياً ويعرض قائمة المحطات مع زر ملاحة لكل شحنة. الموقع يُطلب مرة واحدة ولا يُحفظ. رابط Google Maps يعرض أول 9 محطات فقط.</p><div id="message" role="status" aria-live="polite"></div><section id="insideMapPanel" class="inmap-panel" hidden><div class="inmap-head"><strong>🗺️ خريطة الشحنة داخل Shipping Pulse</strong><button type="button" id="insideMapClose">✕</button></div><p id="insideMapStatus">الخريطة للعرض؛ تعليمات القيادة متاحة في Google Maps.</p><div id="insideMap" class="inmap-map"></div><div class="inmap-actions"><button type="button" id="insideMapFollow">📍 متابعة موقعي</button><button type="button" id="shareLiveLocation">🔒 مشاركة موقعي مع الإدارة: متوقفة</button><button type="button" id="insideMapStop">إيقاف المتابعة</button><a id="insideMapExternal" class="map-link" target="_blank" rel="noopener noreferrer">🚗 فتح Google Maps</a></div></section><section id="routePlan" hidden></section><section id="orders" class="orders"></section></main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
 const $=id=>document.getElementById(id);let orders=[],claims=[],historyComplete=true;
 function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
@@ -110,8 +110,12 @@ function openRoute(items,origin){
  if(stops.length>1)params.set('waypoints',stops.slice(0,-1).join('|'));
  window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer');
 }
-let insideMap=null,insideMapLayers=[],insideMapWatch=null,insideMapPosition=null;
+let insideMap=null,insideMapLayers=[],insideMapWatch=null,insideMapPosition=null,shareLiveEnabled=false,lastLiveSent=0;
 let insideMapRequest=0,insideMapLastRouteAt=0,insideMapLastOrigin=null,insideMapLastOrder='',insideMapRouteTimer=null,insideMapRouteLine=null,insideMapFallbackLine=null,insideMapPin=null,insideMapDriverPin=null,insideMapRouteReady=false;
+async function sendLiveLocation(payload){try{const res=await fetch('/api/driver-live-location',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});if(!res.ok)throw Error('location unavailable');return true}catch{return false}}
+async function disableLiveShare(){shareLiveEnabled=false;$('shareLiveLocation').textContent='🔒 مشاركة موقعي مع الإدارة: متوقفة';await sendLiveLocation({sharing:false})}
+$('shareLiveLocation').onclick=async()=>{if(shareLiveEnabled){await disableLiveShare();return}if(!insideMapPosition){$('insideMapStatus').textContent='اضغط متابعة موقعي أولًا، ثم فعّل مشاركة الموقع.';return}shareLiveEnabled=true;$('shareLiveLocation').textContent='🟢 مشاركة موقعي مع الإدارة: مفعلة — اضغط للإيقاف';const ok=await sendLiveLocation({sharing:true,latitude:insideMapPosition[0],longitude:insideMapPosition[1],accuracy:insideMapAccuracy||0});if(!ok){await disableLiveShare();$('insideMapStatus').textContent='تعذر تفعيل مشاركة الموقع. تأكد من تجهيز قاعدة البيانات.'}};
+let insideMapAccuracy=0;
 function stopInsideMapWatch(){if(insideMapWatch!==null&&navigator.geolocation)navigator.geolocation.clearWatch(insideMapWatch);insideMapWatch=null}
 function resetInsideMapRoute(){insideMapRequest++;clearTimeout(insideMapRouteTimer);insideMapRouteTimer=null;insideMapLastOrigin=null;insideMapLastOrder='';insideMapLastRouteAt=0;insideMapRouteReady=false;if(insideMapRouteLine){insideMapRouteLine.remove();insideMapRouteLine=null}if(insideMapFallbackLine){insideMapFallbackLine.remove();insideMapFallbackLine=null}}
 function drawInsideMapRoute(point,orderId){
@@ -168,19 +172,20 @@ function showInsideMap(order){
  }else{$('insideMapStatus').textContent='اضغط متابعة موقعي لحساب مسار القيادة والمسافة والوقت المتوقع.';insideMap.setView(point,14)}
  requestAnimationFrame(()=>insideMap.invalidateSize());
 }
-$('insideMapClose').onclick=()=>{stopInsideMapWatch();resetInsideMapRoute();$('insideMapPanel').hidden=true};
-$('insideMapStop').onclick=()=>{stopInsideMapWatch();$('insideMapStatus').textContent='تم إيقاف متابعة الموقع.'};
+$('insideMapClose').onclick=()=>{disableLiveShare();stopInsideMapWatch();resetInsideMapRoute();$('insideMapPanel').hidden=true};
+$('insideMapStop').onclick=()=>{disableLiveShare();stopInsideMapWatch();$('insideMapStatus').textContent='تم إيقاف متابعة الموقع.'};
 $('insideMapFollow').onclick=()=>{
  if(!navigator.geolocation){$('insideMapStatus').textContent='المتصفح لا يدعم الموقع.';return}
  stopInsideMapWatch();
  $('insideMapStatus').textContent='جارٍ تحديد موقعك...';
  insideMapWatch=navigator.geolocation.watchPosition(p=>{
-  insideMapPosition=[p.coords.latitude,p.coords.longitude];
+  insideMapPosition=[p.coords.latitude,p.coords.longitude];insideMapAccuracy=p.coords.accuracy;
+  if(shareLiveEnabled&&Date.now()-lastLiveSent>15000){lastLiveSent=Date.now();sendLiveLocation({sharing:true,latitude:insideMapPosition[0],longitude:insideMapPosition[1],accuracy:insideMapAccuracy})}
   const order=orders.find(o=>String(o['Order ID'])===$('insideMapPanel').dataset.orderId);
   if(order)showInsideMap(order);
  },()=>{$('insideMapStatus').textContent='تعذر الوصول لموقعك.';stopInsideMapWatch()},{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
 };
-window.addEventListener('pagehide',()=>{stopInsideMapWatch();resetInsideMapRoute()});
+window.addEventListener('pagehide',()=>{if(shareLiveEnabled)navigator.sendBeacon?.('/api/driver-live-location',new Blob([JSON.stringify({sharing:false})],{type:'application/json'}));stopInsideMapWatch();resetInsideMapRoute()});
 let plannedStops=[];
 let arrivedStopIds=new Set();
 let routeStorageKey='';
