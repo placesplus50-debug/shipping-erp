@@ -48,6 +48,19 @@ export async function onRequestGet({request,env}){
    for(const h of [...REQUIRED,"Google Maps URL"])if(headers.includes(h))order[h]=String(row[headers.indexOf(h)]??"");
    return order;
   });
+  // Optional V2 assignment overlay; the source spreadsheet stays read-only.
+  try {
+    const assigned=await env.DB.prepare("SELECT order_id,driver_id FROM v2_dispatch_assignments LIMIT 5000").all();
+    const byOrder=new Map((assigned.results||[]).map(a=>[a.order_id,a.driver_id]));
+    for(const order of orders){
+      if(!String(order["Driver ID"]||"").trim()){
+        const assignedDriver=byOrder.get(order["Order ID"]);
+        if(assignedDriver)order["Driver ID"]=assignedDriver;
+      }
+    }
+  }catch(_e){
+    // Migration not applied yet; preserve existing behavior.
+  }
   const scoped=actor.role==="driver"?orders.filter(o=>o["Driver ID"]===actor.driver_id):orders;
   // Overlay preview-only status events without mutating Google Sheets.
   const ids=scoped.map(o=>o["Order ID"]);
