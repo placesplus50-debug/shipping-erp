@@ -32,7 +32,7 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
 <div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي غير المسجل للتحصيل</small><strong id="cod">—</strong></div></div>
 <div class="notice">مرحلة اختبار: البيانات تُقرأ مباشرة من Google Sheets. تغيير الحالة وتسجيل التحصيل يُحفظان في D1 وتُرسل تحديثاتهما إلى Google Sheets عند تفعيل المزامنة.</div>
 <div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
-<div class="location-toolbar"><button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">زر المسار يطلب موقعك مرة واحدة لترتيب أقرب الشحنات ذات إحداثيات GPS (تقدير مسافة مستقيمة، وليس زمن الطريق). لو رفضت الموقع، يُستخدم ترتيب الشيت. لا يتم حفظ موقعك أو تتبعه. حد أقصى 9 شحنات في المسار.</p><div id="message" role="status" aria-live="polite"></div><section id="routePlan" hidden></section><section id="orders" class="orders"></section></main>
+<div class="location-toolbar"><button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يرتب الشحنات بإحداثيات GPS تقريبياً ويعرض قائمة المحطات مع زر ملاحة لكل شحنة. الموقع يُطلب مرة واحدة ولا يُحفظ. رابط Google Maps يعرض أول 9 محطات فقط.</p><div id="message" role="status" aria-live="polite"></div><section id="routePlan" hidden></section><section id="orders" class="orders"></section></main>
 <script>
 const $=id=>document.getElementById(id);let orders=[],claims=[],historyComplete=true;
 function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
@@ -91,6 +91,9 @@ function openRoute(items,origin){
 }
 let plannedStops=[];
 function showPlannedStops(){
+ const q=$('search').value.trim().toLowerCase(),f=$('filter').value;
+ const eligible=new Map(orders.filter(o=>preciseLocation(o)&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status'])&&(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q)))).map(o=>[o['Order ID'],o]));
+ plannedStops=plannedStops.filter(o=>eligible.has(o['Order ID'])).map(o=>eligible.get(o['Order ID']));
  const panel=$('routePlan');panel.replaceChildren();panel.hidden=!plannedStops.length;
  if(!plannedStops.length)return;
  panel.append(node('h3','','محطات التوصيل بالترتيب ('+plannedStops.length+')'));
