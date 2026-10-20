@@ -115,7 +115,7 @@ function cairoDate(value){
  const raw=String(value).trim();
  const iso=/^\\d{4}-\\d{2}-\\d{2}$/.test(raw)?raw+'T00:00:00Z':raw.replace(' ','T')+(raw.includes('Z')||/[+-]\\d\\d:\\d\\d$/.test(raw)?'':'Z');
  const dt=new Date(iso);
- return Number.isNaN(dt.getTime())?raw.slice(0,10):new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Cairo',year:'numeric',month:'2-digit',day:'2-digit'}).format(dt);
+ return Number.isNaN(dt.getTime())?raw.slice(0,10):(()=>{const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Africa/Cairo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(dt);const v=Object.fromEntries(parts.map(p=>[p.type,p.value]));return v.year+'-'+v.month+'-'+v.day})();
 }
 function statementData(){
  const driver=el('driverStatement').value,from=el('statementFrom').value,to=el('statementTo').value;
