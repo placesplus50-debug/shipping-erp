@@ -42,6 +42,16 @@ function mapLink(order){return 'https://www.google.com/maps/search/?api=1&query=
 function render(){
  const q=$('search').value.trim().toLowerCase(),f=$('filter').value;
  const visible=orders.filter(o=>(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
+ const routeOrders=visible.filter(o=>String(o['City / Area']||'').trim()&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status']));
+ $('routeMap').disabled=routeOrders.length===0;
+ $('routeMap').onclick=()=>{
+  const addresses=routeOrders.slice(0,9).map(o=>String(o['City / Area']).trim());
+  if(!addresses.length)return;
+  if(addresses.length===1){window.open(mapLink(routeOrders[0]),'_blank','noopener,noreferrer');return}
+  const destination=addresses.pop(),params=new URLSearchParams({api:'1',destination,travelmode:'driving'});
+  if(addresses.length>1)params.set('waypoints',addresses.slice(0,-1).join('|'));
+  window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer');
+ };
  const root=$('orders');root.replaceChildren();
  if(!visible.length){root.append(node('div','empty','لا توجد شحنات مطابقة'));return}
  for(const o of visible){
