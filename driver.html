@@ -91,7 +91,6 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
  }
  const move=(id,target)=>{const node=el(id);if(node)views[target].append(node)};
  const heading=main.querySelector('.heading');if(heading)views.overview.append(heading);
- move('count','overview'); // stats will be moved together below
  const stats=main.querySelector('.stats');if(stats)views.overview.append(stats);
  const notice=main.querySelector('.notice');if(notice)views.overview.append(notice);
  const shortcuts=document.createElement('div');shortcuts.className='driver-shortcuts';
@@ -114,10 +113,10 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
   const requested=location.hash.slice(1);const selected=views[requested]?requested:'overview';
   Object.entries(views).forEach(([id,node])=>node.hidden=id!==selected);
   document.querySelectorAll('[data-driver-section]').forEach(a=>{const active=a.dataset.driverSection===selected;a.classList.toggle('active',active);if(a.classList.contains('sp-nav')){if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')}});
-  document.querySelectorAll('.sp-nav[data-driver-section]').forEach(a=>a.addEventListener('click',()=>{document.body.classList.remove('sp-menu-open');const shade=el('spShade');if(shade)shade.hidden=true;el('spMenu')?.setAttribute('aria-expanded','false')},{once:true}));
   if(selected==='route')setTimeout(()=>{window.dispatchEvent(new Event('resize'))},100);
   window.scrollTo(0,0);
  }
+ document.querySelectorAll('.sp-nav[data-driver-section]').forEach(a=>a.addEventListener('click',()=>{document.body.classList.remove('sp-menu-open');const shade=el('spShade');if(shade)shade.hidden=true;el('spMenu')?.setAttribute('aria-expanded','false')}));
  window.addEventListener('hashchange',show);show();
  // Opening a shipment map switches to the route view while preserving its current order.
  const panel=el('insideMapPanel');
