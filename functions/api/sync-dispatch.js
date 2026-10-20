@@ -90,7 +90,7 @@ export async function onRequestPost({request,env}){
  if(!sameOrigin(request))return reply({error:"Invalid origin"},403);
  if(env.SHEETS_SYNC_ENABLED!=="true")return reply({error:"Sync not enabled"},409);
  const body=await request.json().catch(()=>({}));
- let backfilled=0;
+ let backfilled=0,ordersUpdated=0;
  if(body?.backfillFollowups===true){
   const {results}=await env.DB.prepare("SELECT order_id FROM delivery_followups LIMIT 1000").all();
   for(const r of results||[]){
@@ -100,8 +100,13 @@ export async function onRequestPost({request,env}){
    backfilled++;
   }
  }
+ if(body?.backfillFollowups===true){
+  const token=await getAccessToken(env);
+  const {results:orders}=await env.DB.prepare("SELECT DISTINCT order_id FROM driver_status_events LIMIT 1000").all();
+  for(const o of orders||[]){await syncOrderStatus(env,token,o.order_id);ordersUpdated++}
+ }
  const result=await dispatchPending(env);
- return reply({...result,backfilled,mode:"manual_dispatch"});
+ return reply({...result,backfilled,ordersUpdated,mode:"manual_dispatch"});
  }catch{return safeError()}
 }
 
