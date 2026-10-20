@@ -94,7 +94,7 @@ export async function onRequestPost({request,env}){
  if(body?.backfillFollowups===true){
   const {results}=await env.DB.prepare("SELECT order_id FROM delivery_followups LIMIT 1000").all();
   for(const r of results||[]){
-   const exists=await env.DB.prepare("SELECT id FROM sheet_sync_outbox WHERE destination_tab='FOLLOWUPS' AND json_extract(payload_json,'$.orderId')=? AND state!='sent' LIMIT 1").bind(r.order_id).first();
+   const exists=await env.DB.prepare("SELECT id FROM sheet_sync_outbox WHERE destination_tab='FOLLOWUPS' AND json_extract(payload_json,'$.orderId')=? LIMIT 1").bind(r.order_id).first();
    if(exists)continue;
    await env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) VALUES('followup', (SELECT COALESCE(MAX(event_id),0)+1 FROM sheet_sync_outbox WHERE event_type='followup'),'FOLLOWUPS',json_object('orderId',?))").bind(r.order_id).run();
    backfilled++;
@@ -107,7 +107,7 @@ export async function onRequestPost({request,env}){
  }
  const result=await dispatchPending(env);
  return reply({...result,backfilled,ordersUpdated,mode:"manual_dispatch"});
- }catch{return safeError()}
+ }catch(e){return reply({error:"Sync dispatch failed",detail:String(e?.message||e).slice(0,180)},503)}
 }
 
 export async function onRequestGet({request,env}){
