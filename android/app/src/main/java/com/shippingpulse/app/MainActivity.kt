@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.webkit.GeolocationPermissions
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -56,6 +55,7 @@ class MainActivity : Activity() {
         setContentView(layout)
         browser.settings.javaScriptEnabled = true
         browser.settings.domStorageEnabled = true
+        browser.settings.setGeolocationEnabled(true)
         browser.settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
         browser.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -93,7 +93,7 @@ class MainActivity : Activity() {
         }
         browser.webChromeClient = object : WebChromeClient() {
             override fun onGeolocationPermissionsShowPrompt(origin: String?, callback: GeolocationPermissions.Callback?) {
-                if (origin != "https://shipping-erp.pages.dev" || callback == null) { callback?.invoke(origin, false, false); return }
+                if (origin == null || Uri.parse(origin).host != "shipping-erp.pages.dev" || Uri.parse(origin).scheme != "https" || callback == null) { callback?.invoke(origin, false, false); return }
                 if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
                     checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     callback.invoke(origin, true, false)
