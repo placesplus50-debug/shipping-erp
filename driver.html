@@ -32,13 +32,21 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
 <div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي غير المسجل للتحصيل</small><strong id="cod">—</strong></div></div>
 <div class="notice">مرحلة اختبار: البيانات تُقرأ مباشرة من Google Sheets. تغيير الحالة وتسجيل التحصيل يُحفظان في D1 وتُرسل تحديثاتهما إلى Google Sheets عند تفعيل المزامنة.</div>
 <div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
-<div class="location-toolbar"><button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يستخدم المواقع الدقيقة فقط. الطلبات بدون رابط موقع أو إحداثيات لن تدخل في المسار. لا يوجد تتبع مباشر للمندوب.</p><div id="message" role="status" aria-live="polite"></div><section id="orders" class="orders"></section></main>
+<div class="location-toolbar"><label style="display:inline-flex;align-items:center;gap:7px;margin-left:12px;font-weight:700"><input type="checkbox" id="demoLocations" style="min-width:0;flex:none"> مواقع تجريبية للاختبار فقط</label><button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يستخدم المواقع الدقيقة فقط. فعّل «مواقع تجريبية» لاختبار الخريطة دون تغيير بيانات الشحنات. المواقع التجريبية ليست عناوين العملاء.</p><div id="message" role="status" aria-live="polite"></div><section id="orders" class="orders"></section></main>
 <script>
 const $=id=>document.getElementById(id);let orders=[],claims=[],historyComplete=true;
 function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
 function node(tag,cls,txt){const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el}
 function remaining(o){const due=Math.round((Number(String(o['COD Due']||0).replace(/,/g,''))||0)*100);const claimed=claims.filter(c=>c.order_id===o['Order ID']&&c.decision!=='rejected').reduce((n,c)=>n+c.amount_cents,0);return Math.max(0,due-claimed)/100}
 // Navigation is read-only. Precise coordinates are preferred; a city is never treated as a precise pin.
+// Local-only preview fixtures. Never persisted or sent to the API.
+const demoPins=['30.044420,31.235712','30.060915,31.219230','30.028810,31.211720','30.071460,31.290250','30.013120,31.207510'];
+function navigationOrder(order){
+ if(!$('demoLocations')?.checked)return order;
+ const index=orders.findIndex(o=>o['Order ID']===order['Order ID']);
+ if(index<0)return order;
+ return {...order,'Google Maps URL':demoPins[index%demoPins.length],Latitude:undefined,Longitude:undefined};
+}
 function preciseLocation(order){
  const raw=String(order['Google Maps URL']||order['Maps URL']||order['Location URL']||order['Customer Location']||'').trim();
  const coordinate=s=>{const m=String(s||'').match(/^(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)$/);return m&&Math.abs(+m[1])<=90&&Math.abs(+m[2])<=180?m[1]+','+m[2]:null};
@@ -62,12 +70,12 @@ function mapLink(order){
 function render(){
  const q=$('search').value.trim().toLowerCase(),f=$('filter').value;
  const visible=orders.filter(o=>(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
- const routeOrders=visible.filter(o=>preciseLocation(o)&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status']));
+ const routeOrders=visible.filter(o=>preciseLocation(navigationOrder(o))&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status']));
  $('routeMap').disabled=routeOrders.length===0;
  $('routeMap').onclick=()=>{
-  const addresses=routeOrders.slice(0,9).map(o=>preciseLocation(o));
+  const addresses=routeOrders.slice(0,9).map(o=>preciseLocation(navigationOrder(o)));
   if(!addresses.length)return;
-  if(addresses.length===1){window.open(mapLink(routeOrders[0]),'_blank','noopener,noreferrer');return}
+  if(addresses.length===1){window.open(mapLink(navigationOrder(routeOrders[0])),'_blank','noopener,noreferrer');return}
   const destination=addresses.pop(),params=new URLSearchParams({api:'1',destination,travelmode:'driving'});
   if(addresses.length>1)params.set('waypoints',addresses.slice(0,-1).join('|'));
   window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer');
@@ -81,7 +89,7 @@ function render(){
  const details=node('div','details');
  details.append(node('span','', '📍 '+(o['City / Area']||'—')),node('span','', '💳 '+(o['Payment Type']||'—')),node('span','', 'حالة الدفع: '+(claims.some(c=>c.order_id===o['Order ID']&&c.decision==='approved')?(remaining(o)===0?'التحصيل معتمد بالكامل':'تحصيل معتمد جزئيًا'):claims.some(c=>c.order_id===o['Order ID']&&!c.decision)?'تحصيل بانتظار المراجعة':(o['Payment Status']||'—'))));
  c.append(details);
- if(mapLink(o)){const locationLink=node('a','',preciseLocation(o)?'📍 ملاحة إلى موقع العميل':'📍 عرض الموقع التقريبي — يحتاج تأكيد');locationLink.href=mapLink(o);locationLink.target='_blank';locationLink.rel='noopener noreferrer';locationLink.className='map-link';c.append(locationLink)}
+ if(mapLink(navigationOrder(o))){const locationLink=node('a','',$('demoLocations').checked?'🧪 فتح موقع تجريبي (ليس العميل)':preciseLocation(o)?'📍 ملاحة إلى موقع العميل':'📍 عرض الموقع التقريبي — يحتاج تأكيد');locationLink.href=mapLink(navigationOrder(o));locationLink.target='_blank';locationLink.rel='noopener noreferrer';locationLink.className='map-link';c.append(locationLink)}
  const finalReturn=(o._effectiveStatus||o['Shipping Status'])==='Returned';
  const amount=node('div','money',finalReturn?'مرتجع — لا يوجد تحصيل مطلوب':(o._effectiveStatus==='Delivery failed'?'تعذر التسليم — لا تحصيل حتى إعادة التسليم':'المتبقي غير المسجل: '+fmt(remaining(o))+' ج.م'));c.append(amount);
  if(o.Notes)c.append(node('div','note','ملاحظات: '+o.Notes));
@@ -170,5 +178,5 @@ async function load(){
  $('message').textContent='';render();
  }catch(e){$('message').textContent=e.message;$('message').className='error';$('orders').replaceChildren()}finally{$('reload').disabled=false}
 }
-$('reload').addEventListener('click',load);$('search').addEventListener('input',render);$('filter').addEventListener('change',render);load();
+$('demoLocations').addEventListener('change',render);$('reload').addEventListener('click',load);$('search').addEventListener('input',render);$('filter').addEventListener('change',render);load();
 </script></body></html>
