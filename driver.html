@@ -112,8 +112,25 @@ function openRoute(items,origin){
 }
 let plannedStops=[];
 let arrivedStopIds=new Set();
+let routeStorageKey='';
+function saveRouteProgress(){
+ if(!routeStorageKey)return;
+ try{sessionStorage.setItem(routeStorageKey,JSON.stringify({orderIds:plannedStops.map(o=>String(o['Order ID'])),arrived:[...arrivedStopIds]}))}catch{}
+}
+function restoreRouteProgress(){
+ let saved=null;
+ try{saved=JSON.parse(sessionStorage.getItem(routeStorageKey)||'null')}catch{}
+ const active=orders.filter(o=>preciseLocation(o)&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status']));
+ const byId=new Map(active.map(o=>[String(o['Order ID']),o]));
+ const stored=Array.isArray(saved?.orderIds)?saved.orderIds:[];
+ const ids=[...new Set([...stored,...active.map(o=>String(o['Order ID']))])];
+ plannedStops=ids.map(id=>byId.get(id)).filter(Boolean);
+ arrivedStopIds=new Set((Array.isArray(saved?.arrived)?saved.arrived:[]).map(String).filter(id=>byId.has(id)));
+ saveRouteProgress();
+}
 function markStopArrived(id){
  arrivedStopIds.add(String(id));
+ saveRouteProgress();
  showPlannedStops();
 }
 function showPlannedStops(){
@@ -154,7 +171,7 @@ function render(){
  const visible=orders.filter(o=>(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
  const routeOrders=visible.filter(o=>preciseLocation(o)&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status']));
  $('routeMap').disabled=routeOrders.length===0;
- $('routeMap').textContent='🗺️ ترتيب أقرب الشحنات وفتح المسار ('+routeOrders.length+')';
+ $('routeMap').textContent='🗺️ ترتيب المسار وفتح Google Maps ('+routeOrders.length+')';
  $('routeMap').onclick=()=>{
   if(!routeOrders.length)return;
   // Open a tab synchronously to avoid popup blockers while requesting one-time location.
@@ -162,7 +179,7 @@ function render(){
   const navigate=origin=>{
    const withCoordinates=routeOrders.filter(o=>gpsPoint(o));
    const withoutCoordinates=routeOrders.filter(o=>!gpsPoint(o));
-   const ordered=origin?nearestRoute(withCoordinates,origin).concat(withoutCoordinates):routeOrders;plannedStops=ordered;showPlannedStops();
+   const ordered=origin?nearestRoute(withCoordinates,origin).concat(withoutCoordinates):routeOrders;plannedStops=ordered;saveRouteProgress();showPlannedStops();
    const stops=ordered.slice(0,9).map(o=>preciseLocation(o));
    if(!stops.length){tab?.close();return}
    let url;
@@ -269,6 +286,8 @@ async function load(){
  $('cod').textContent=fmt(orders.filter(o=>!['Returned','Delivery failed'].includes(o._effectiveStatus)).reduce((s,o)=>s+remaining(o),0))+' ج.م';
  const selected=$('filter').value;const states=[...new Set(orders.map(o=>o._effectiveStatus||o['Shipping Status']).filter(Boolean))];
  $('filter').replaceChildren(new Option('كل الحالات',''),...states.map(s=>new Option(s,s)));$('filter').value=states.includes(selected)?selected:'';
+ routeStorageKey='shipping-route-progress:'+String(me.user.driverId||me.user.id||'driver');
+ restoreRouteProgress();
  $('message').textContent='';render();
  }catch(e){$('message').textContent=e.message;$('message').className='error';$('orders').replaceChildren()}finally{$('reload').disabled=false}
 }
