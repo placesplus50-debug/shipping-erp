@@ -1,0 +1,16 @@
+name: Production security smoke test
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 6 * * 1"
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify unauthenticated APIs reject access
+        run: node scripts/security-smoke.mjs "${{ vars.PRODUCTION_URL || 'https://shipping-erp.pages.dev' }}"
