@@ -378,7 +378,7 @@ function render(){
  const quick=window.driverQuickFilter||'all';
  const quickVisible=visible.filter(o=>{const state=String(o._effectiveStatus||o['Shipping Status']||'').trim().toLowerCase();const delivered=/^(delivered|تم التسليم|تم التوصيل)$/.test(state);const returned=/(returned|return|مرتجع|مرتد)/.test(state);return quick==='all'||(quick==='delivered'&&delivered)||(quick==='returned'&&returned)||(quick==='pending'&&!delivered&&!returned)});
  const visibleCount=document.getElementById('driverVisibleCount');if(visibleCount)visibleCount.textContent=fmt(quickVisible.length)+' من '+fmt(orders.length);
- const routeOrders=visible.filter(o=>preciseLocation(o)&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status']));
+ const routeOrders=quickVisible.filter(o=>preciseLocation(o)&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status']));
  $('routeMap').disabled=routeOrders.length===0;
  $('sortByLocation').disabled=routeOrders.length===0;
  $('sortByLocation').onclick=()=>{
@@ -419,8 +419,8 @@ function render(){
  };
  showPlannedStops();
  const root=$('orders');root.replaceChildren();
- if(!visible.length){root.append(node('div','empty','لا توجد شحنات مطابقة'));return}
- for(const o of visible){
+ if(!quickVisible.length){root.append(node('div','driver-search-empty','مفيش شحنات مطابقة للبحث أو الفلتر الحالي. جرّب مسح الفلاتر.'));return}
+ for(const o of quickVisible){
  const c=node('article','card'),top=node('div','cardtop'),left=node('div');
  left.append(node('h2','',o['Order ID']||'—'),node('div','note',o.Customer||'—'));
  top.append(left,node('span','status',o._effectiveStatus||o['Shipping Status']||'غير محدد'));c.append(top);
