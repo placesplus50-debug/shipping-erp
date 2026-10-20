@@ -48,6 +48,17 @@ export async function deliver(env,token,item){
  if(matches.length)await sheets(token,tab+"!A"+matches[0]+":"+last+matches[0],"PUT",row);
  else await sheets(token,tab+"!A:"+last,"POST",row);
 }
+async function syncOrderStatus(env,token,orderId){
+ const latest=await env.DB.prepare("SELECT new_status FROM driver_status_events WHERE order_id=? ORDER BY id DESC LIMIT 1").bind(orderId).first();
+ if(!latest)return;
+ const sheet=await sheets(token,"ORDERS!A1:K");
+ const rows=sheet.values||[];
+ if(rows[0]?.[0]!=="Order ID"||rows[0]?.[10]!=="Shipping Status")throw Error("orders_header_mismatch");
+ const matches=[];
+ for(let i=1;i<rows.length;i++)if(rows[i]?.[0]===orderId)matches.push(i+1);
+ if(matches.length!==1)throw Error(matches.length?"duplicate_order_id":"order_not_found_in_sheet");
+ if(rows[matches[0]-1][10]!==latest.new_status)await sheets(token,"ORDERS!K"+matches[0],"PUT",[latest.new_status]);
+}
 // Called after a successful D1 transaction. Writes remain disabled unless explicitly enabled.
 export async function dispatchPending(env){
  if(env.SHEETS_SYNC_ENABLED!=="true")return {sent:0,failed:0,enabled:false};
@@ -60,6 +71,7 @@ export async function dispatchPending(env){
   if(!lease.meta?.changes)continue;
   try{
    await deliver(env,token,item);
+   if(item.destination_tab==="TRACKING")await syncOrderStatus(env,token,JSON.parse(item.payload_json).orderId);
    await env.DB.prepare("UPDATE sheet_sync_outbox SET state='sent',attempts=attempts+1,last_error=NULL,synced_at=CURRENT_TIMESTAMP WHERE id=?").bind(item.id).run();
    sent++;
   }catch(e){
