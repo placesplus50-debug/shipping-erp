@@ -65,3 +65,15 @@ body.sp-app{margin:0;padding:0 var(--sp-side) 0 0;background:var(--sp-bg);color:
  body.sp-menu-open{overflow:hidden}
  .sp-app .sp-nav{white-space:normal;overflow-wrap:break-word}
 }
+
+/* Consistent Android/WebView mobile date fields and financial report layout */
+.sp-app input:is([type="date"],[type="datetime-local"],[type="time"]){direction:ltr;text-align:left;unicode-bidi:isolate;font-family:Tahoma,Arial,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:0;min-width:0}
+.sp-app input:is([type="date"],[type="datetime-local"])::-webkit-calendar-picker-indicator{opacity:.8;cursor:pointer}
+@media(max-width:800px){
+ .sp-app .sp-sidebar{border-inline-start:0;overscroll-behavior:contain}
+ .sp-app .sp-shade{background:#1c1033b8!important}
+ .sp-app :is(.filter-row,.filters,.filterbar,.report-filters){display:flex;flex-wrap:wrap;gap:10px;align-items:end;min-width:0}
+ .sp-app :is(.filter-row,.filters,.filterbar,.report-filters)>*{min-width:0}
+ .sp-app :is(.tablewrap,.table-scroll,.scroll){overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x pan-y}
+ .sp-app :is(.metric,.stat,.card) :is(strong,.value,.amount){font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+}
