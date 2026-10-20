@@ -124,6 +124,31 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
 .driver-system-info>summary{font-size:12px;color:#6e6080;font-weight:800;cursor:pointer}
 .driver-system-info>.notice{margin:12px 0 0;font-size:12px;line-height:1.8}
 @media(max-width:650px){.driver-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.driver-summary>div{min-height:80px}}
+</style><style id="shipping-v2-mobile-refresh">
+@media(max-width:650px){
+ body.sp-app{background:#f7f6fb!important}
+ .sp-app header{padding:11px 14px!important;gap:8px!important;box-shadow:none!important;background:#fff!important;color:#28183e!important;border-bottom:1px solid #ece7f3!important}
+ .sp-app header b,.sp-app header strong{font-size:16px!important}
+ .sp-app main{padding:12px 14px 95px!important}
+ .sp-app .heading{padding:4px 0 7px!important}
+ .sp-app .heading h1{font-size:20px!important;line-height:1.3!important}
+ .sp-app .heading p{font-size:12px!important;margin:2px 0!important}
+ .sp-app .stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin:10px 0!important}
+ .sp-app .stat{padding:10px 12px!important;min-height:80px!important;border-radius:14px!important}
+ .sp-app .stat strong{font-size:21px!important;line-height:1.35!important}
+ .sp-app .stat small{font-size:11px!important}
+ .sp-app .driver-summary{gap:7px!important;margin:10px 0!important}
+ .sp-app .driver-summary>div{padding:9px!important;border-radius:13px!important}
+ .sp-app .driver-summary strong{font-size:19px!important}
+ .sp-app .card{padding:13px!important;border-radius:15px!important;box-shadow:0 3px 14px #25174109!important}
+ .sp-app .toolbar{margin:12px 0!important}
+ .sp-app .driver-bottom-nav{background:#fff!important;border-top:1px solid #e9e3f2!important;padding:6px 5px max(7px,env(safe-area-inset-bottom))!important}
+ .sp-app .driver-bottom-nav a{font-size:11px!important;border-radius:12px!important}
+ .sp-app .driver-bottom-nav a.active{background:#eee8fa!important;color:#4f35a0!important}
+ .sp-app button{min-height:41px}
+ .sp-app .driver-shortcuts{margin:10px 0!important}
+ .sp-app .driver-shortcut{min-height:70px!important;padding:10px 12px!important}
+}
 </style></head><body class="sp-app sp-page-driver" data-page="driver"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav" href="/collections.html" data-staff><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a><a class="sp-nav active" href="#overview" data-driver-section="overview" aria-current="page"><span aria-hidden="true">⌂</span>الرئيسية</a><a class="sp-nav" href="#shipments" data-driver-section="shipments"><span aria-hidden="true">▦</span>شحناتي</a><a class="sp-nav" href="#route" data-driver-section="route"><span aria-hidden="true">⌖</span>خط السير والخريطة</a><a class="sp-nav" href="#collections" data-driver-section="collections"><span aria-hidden="true">▤</span>التحصيلات</a><a class="sp-nav" href="/system-check.html" id="systemCheckNav" data-staff hidden><span aria-hidden="true">✓</span>فحص النظام</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Production</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / شحناتي</small><h1>شحناتي</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog>
 
 <main id="spMain" tabindex="-1"><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
