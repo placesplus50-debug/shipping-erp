@@ -18,14 +18,15 @@ export async function onRequestPost({request,env,waitUntil}){
  if(!env.DB)return safeError();
  try{
  const actor=await currentUser(request,env);if(!actor)return reply({error:"Authentication required"},401);
- if(actor.role!=="driver"||!actor.driver_id)return reply({error:"Driver only"},403);
+ const isAdmin=["super_admin","admin"].includes(actor.role);
+ if(!isAdmin&&(actor.role!=="driver"||!actor.driver_id))return reply({error:"Driver or admin only"},403);
  if(!sameOrigin(request))return reply({error:"Invalid origin"},403);
  const b=await request.json();
  if(typeof b.orderId!=="string"||!/^ORD-[\w-]{1,50}$/.test(b.orderId)||!Number.isSafeInteger(b.amountCents)||b.amountCents<0||!methods.includes(b.method)||!holders.includes(b.holder)||typeof b.requestId!=="string"||!/^[-\w]{12,100}$/.test(b.requestId)||String(b.note||"").length>500)return reply({error:"Invalid collection"},400);
  if(b.method==="cash"&&b.holder!=="driver")return reply({error:"Cash must be held by driver until reviewed"},400);
  if(b.method!=="cash"&&b.holder!=="company")return reply({error:"Electronic payments are company-held"},400);
  const orders=await scopedOrders(request,env),order=orders.find(o=>o["Order ID"]===b.orderId);
- if(!order||order["Driver ID"]!==actor.driver_id)return reply({error:"Order not assigned"},403);
+ if(!order||(!isAdmin&&order["Driver ID"]!==actor.driver_id))return reply({error:"Order not assigned"},403);
  const effective=order["Effective Shipping Status"]||order["Shipping Status"];
  if(effective!=="Delivered")return reply({error:"Delivery must be completed first"},409);
  const due=Math.round(Number(String(order["COD Due"]||"0").replace(/,/g,""))*100);
@@ -34,7 +35,7 @@ export async function onRequestPost({request,env,waitUntil}){
  if(existing)return reply({error:"Duplicate request"},409);
  const sum=await env.DB.prepare("SELECT COALESCE(SUM(e.amount_cents),0) AS total FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id WHERE e.order_id=? AND (r.decision IS NULL OR r.decision='approved')").bind(b.orderId).first();
  if(sum.total+b.amountCents>due)return reply({error:"Amount exceeds remaining COD"},409);
- const insertCollection=env.DB.prepare("INSERT INTO collection_events(order_id,driver_id,actor_user_id,amount_cents,method,holder,request_id,note) SELECT ?,?,?,?,?,?,?,? WHERE ? >= ? + (SELECT COALESCE(SUM(e.amount_cents),0) FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id WHERE e.order_id=? AND (r.decision IS NULL OR r.decision='approved'))").bind(b.orderId,actor.driver_id,actor.id,b.amountCents,b.method,b.holder,b.requestId,String(b.note||""),due,b.amountCents,b.orderId);
+ const insertCollection=env.DB.prepare("INSERT INTO collection_events(order_id,driver_id,actor_user_id,amount_cents,method,holder,request_id,note) SELECT ?,?,?,?,?,?,?,? WHERE ? >= ? + (SELECT COALESCE(SUM(e.amount_cents),0) FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id WHERE e.order_id=? AND (r.decision IS NULL OR r.decision='approved'))").bind(b.orderId,order["Driver ID"],actor.id,b.amountCents,b.method,b.holder,b.requestId,String(b.note||""),due,b.amountCents,b.orderId);
  const queueCollection=env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) SELECT 'collection',id,'COLLECTIONS',json_object('settlementId','COL-'||id,'orderId',order_id,'driverId',driver_id,'amountCents',amount_cents,'method',method,'holder',holder,'note',note) FROM collection_events WHERE request_id=?").bind(b.requestId);
  const [result]=await env.DB.batch([insertCollection,queueCollection]);
  if(!result.meta?.changes)return reply({error:"COD already fully claimed"},409);
