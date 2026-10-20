@@ -3,7 +3,8 @@ import {getAccessToken} from "./orders.js";
 const spreadsheet="1A_SpdeOmyL0whm89c0egp2jknbarvM4RoPdXqbxfL1M";
 const headers={
  TRACKING:["Event ID","Order ID","Driver ID","Old Status","New Status","Event Time","Collected Cash","Collection Method","Notes","Recorded By"],
- COLLECTIONS:["Settlement ID","Order ID","Driver ID","Cash Collected","Cash Remitted","Outstanding","Remittance Date","Settlement Status","Reviewed By","Notes"]
+ COLLECTIONS:["Settlement ID","Order ID","Driver ID","Cash Collected","Cash Remitted","Outstanding","Remittance Date","Settlement Status","Reviewed By","Notes"],
+ FOLLOWUPS:["Order ID","Driver ID","Reason","Attempts","Action Required","Updated At","Updated By","Shipping Status"]
 };
 const endpoint=range=>"https://sheets.googleapis.com/v4/spreadsheets/"+spreadsheet+"/values/"+encodeURIComponent(range);
 async function sheets(token,range,method="GET",values){
@@ -20,6 +21,11 @@ async function rowFor(env,item){
    ?await env.DB.prepare("SELECT email FROM users WHERE id=?").bind(actorId).first():null;
   return [p.eventId,p.orderId,p.driverId,p.oldStatus,p.newStatus,p.eventTime||"",0,"","",actor?.email||String(p.recordedBy||"")];
  }
+ if(item.destination_tab==="FOLLOWUPS"){
+  const record=await env.DB.prepare("SELECT f.order_id,f.driver_id,f.reason,f.attempt_count,f.action_required,f.updated_at,u.email FROM delivery_followups f LEFT JOIN users u ON u.id=f.updated_by WHERE f.order_id=?").bind(p.orderId).first();
+  if(!record)throw Error("missing_followup");
+  return [record.order_id,record.driver_id,record.reason,record.attempt_count,record.action_required,record.updated_at,record.email||"",p.shippingStatus||""];
+ }
  const id=Number(String(p.settlementId||"").replace(/^COL-/,""));
  if(!Number.isSafeInteger(id)||id<1)throw Error("bad_collection_id");
  const e=await env.DB.prepare("SELECT e.id,e.order_id,e.driver_id,e.amount_cents,e.method,e.holder,e.note,r.decision,r.reviewer_user_id,h.amount_cents AS remitted,h.created_at AS remittance_date,h.destination,u.email AS reviewer_email FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id LEFT JOIN cash_handover h ON h.collection_id=e.id LEFT JOIN users u ON u.id=r.reviewer_user_id WHERE e.id=?").bind(id).first();
@@ -33,13 +39,14 @@ async function rowFor(env,item){
 export async function deliver(env,token,item){
  const tab=item.destination_tab;
  if(!headers[tab])throw Error("unknown_tab");
- const existing=await sheets(token,tab+"!A1:J");
+ const last=tab==="FOLLOWUPS"?"H":"J";
+ const existing=await sheets(token,tab+"!A1:"+last);
  if(JSON.stringify(existing.values?.[0]||[])!==JSON.stringify(headers[tab]))throw Error("header_mismatch");
  const row=await rowFor(env,item),matches=[];
  for(let i=1;i<(existing.values||[]).length;i++)if(existing.values[i]?.[0]===row[0])matches.push(i+1);
  if(matches.length>1)throw Error("duplicate_sheet_id");
- if(matches.length)await sheets(token,tab+"!A"+matches[0]+":J"+matches[0],"PUT",row);
- else await sheets(token,tab+"!A:J","POST",row);
+ if(matches.length)await sheets(token,tab+"!A"+matches[0]+":"+last+matches[0],"PUT",row);
+ else await sheets(token,tab+"!A:"+last,"POST",row);
 }
 // Called after a successful D1 transaction. Writes remain disabled unless explicitly enabled.
 export async function dispatchPending(env){
@@ -70,8 +77,19 @@ export async function onRequestPost({request,env}){
  if(!["super_admin","admin"].includes(user.role))return reply({error:"Admin only"},403);
  if(!sameOrigin(request))return reply({error:"Invalid origin"},403);
  if(env.SHEETS_SYNC_ENABLED!=="true")return reply({error:"Sync not enabled"},409);
+ const body=await request.json().catch(()=>({}));
+ let backfilled=0;
+ if(body?.backfillFollowups===true){
+  const {results}=await env.DB.prepare("SELECT order_id FROM delivery_followups LIMIT 1000").all();
+  for(const r of results||[]){
+   const exists=await env.DB.prepare("SELECT id FROM sheet_sync_outbox WHERE destination_tab='FOLLOWUPS' AND json_extract(payload_json,'$.orderId')=? AND state!='sent' LIMIT 1").bind(r.order_id).first();
+   if(exists)continue;
+   await env.DB.prepare("INSERT INTO sheet_sync_outbox(event_type,event_id,destination_tab,payload_json) VALUES('followup', (SELECT COALESCE(MAX(event_id),0)+1 FROM sheet_sync_outbox WHERE event_type='followup'),'FOLLOWUPS',json_object('orderId',?))").bind(r.order_id).run();
+   backfilled++;
+  }
+ }
  const result=await dispatchPending(env);
- return reply({...result,mode:"manual_dispatch"});
+ return reply({...result,backfilled,mode:"manual_dispatch"});
  }catch{return safeError()}
 }
 
@@ -83,8 +101,8 @@ export async function onRequestGet({request,env}){
   if(!["super_admin","admin"].includes(user.role))return reply({error:"Admin only"},403);
   const token=await getAccessToken(env);
   const inspection={enabled:env.SHEETS_SYNC_ENABLED==="true",readOnly:true,tabs:{},pending:[],reconciliation:{missingCollections:[],duplicateCollections:[],checkedCollections:0}};
-  for(const tab of ["TRACKING","COLLECTIONS"]){
-   const sheet=await sheets(token,tab+"!A1:J");
+  for(const tab of ["TRACKING","COLLECTIONS","FOLLOWUPS"]){
+   const sheet=await sheets(token,tab+"!A1:"+(tab==="FOLLOWUPS"?"H":"J"));
    const values=sheet.values||[];
    const headerMatch=JSON.stringify(values[0]||[])===JSON.stringify(headers[tab]);
    inspection.tabs[tab]={headerMatch,existingRows:Math.max(0,values.length-1)};
