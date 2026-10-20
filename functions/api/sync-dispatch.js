@@ -14,13 +14,21 @@ async function sheets(token,range,method="GET",values){
 }
 async function rowFor(env,item){
  const p=JSON.parse(item.payload_json);
- if(item.destination_tab==="TRACKING")return [p.eventId,p.orderId,p.driverId,p.oldStatus,p.newStatus,p.eventTime||"",0,"","",p.recordedBy||""];
- const id=Number(String(p.settlementId||"").replace("COL-",""));
+ if(item.destination_tab==="TRACKING"){
+  const actorId=Number(p.recordedBy);
+  const actor=Number.isSafeInteger(actorId)&&actorId>0
+   ?await env.DB.prepare("SELECT email FROM users WHERE id=?").bind(actorId).first():null;
+  return [p.eventId,p.orderId,p.driverId,p.oldStatus,p.newStatus,p.eventTime||"",0,"","",actor?.email||String(p.recordedBy||"")];
+ }
+ const id=Number(String(p.settlementId||"").replace(/^COL-/,""));
  if(!Number.isSafeInteger(id)||id<1)throw Error("bad_collection_id");
- const e=await env.DB.prepare("SELECT e.id,e.order_id,e.driver_id,e.amount_cents,e.method,e.holder,e.note,r.decision,r.reviewer_user_id,h.amount_cents AS remitted,h.created_at AS remittance_date,h.destination FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id LEFT JOIN cash_handover h ON h.collection_id=e.id WHERE e.id=?").bind(id).first();
+ const e=await env.DB.prepare("SELECT e.id,e.order_id,e.driver_id,e.amount_cents,e.method,e.holder,e.note,r.decision,r.reviewer_user_id,h.amount_cents AS remitted,h.created_at AS remittance_date,h.destination,u.email AS reviewer_email FROM collection_events e LEFT JOIN collection_reviews r ON r.collection_id=e.id LEFT JOIN cash_handover h ON h.collection_id=e.id LEFT JOIN users u ON u.id=r.reviewer_user_id WHERE e.id=?").bind(id).first();
  if(!e)throw Error("missing_collection");
- const cash=e.method==="cash"?e.amount_cents/100:0,remitted=(e.remitted||0)/100;
- return ["COL-"+id,e.order_id,e.driver_id,cash,remitted,e.method==="cash"&&e.holder==="driver"&&e.decision==="approved"?Math.max(0,cash-remitted):0,e.remittance_date||"",e.remitted!=null?"remitted":e.decision||"pending",e.reviewer_user_id||"",[e.method,e.destination,e.note].filter(Boolean).join(" | ")];
+ const collected=e.method==="cash"?e.amount_cents/100:0;
+ const remitted=(e.remitted||0)/100;
+ const outstanding=e.method==="cash"&&e.holder==="driver"&&e.decision!=="rejected"?Math.max(0,collected-remitted):0;
+ const status=e.decision==="rejected"?"Rejected":e.remitted!=null?"Fully remitted":e.decision==="approved"?"Pending":"Pending";
+ return ["COL-"+id,e.order_id,e.driver_id,collected,remitted,outstanding,e.remittance_date||"",status,e.reviewer_email||"",[e.method,e.destination,e.note].filter(Boolean).join(" | ")];
 }
 export async function deliver(env,token,item){
  const tab=item.destination_tab;
