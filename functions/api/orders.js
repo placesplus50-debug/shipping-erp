@@ -2,7 +2,7 @@ import {reply,currentUser,safeError} from "./auth/_utils.js";
 
 // Read-only Google Sheets source. Never accept a spreadsheet or driver ID from the caller.
 const SPREADSHEET_ID="1A_SpdeOmyL0whm89c0egp2jknbarvM4RoPdXqbxfL1M";
-const RANGE="ORDERS!A1:M";
+const RANGE="ORDERS!A1:N";
 const REQUIRED=["Order ID","Order Date","Customer","Phone","City / Area","Driver ID","Order Total","Prepaid Amount","COD Due","Payment Type","Shipping Status","Payment Status","Notes"];
 const noWrite=()=>reply({error:"Orders are read-only"},405);
 export const onRequestPost=noWrite;
@@ -45,7 +45,7 @@ export async function onRequestGet({request,env}){
   if(REQUIRED.some(h=>!headers.includes(h)))return reply({error:"ORDERS sheet headers do not match expected columns"},502);
   const orders=values.slice(1).filter(row=>row.some(v=>String(v??"").trim())).map(row=>{
    const order={};
-   for(const h of REQUIRED)order[h]=String(row[headers.indexOf(h)]??"");
+   for(const h of [...REQUIRED,"Google Maps URL"])if(headers.includes(h))order[h]=String(row[headers.indexOf(h)]??"");
    return order;
   });
   const scoped=actor.role==="driver"?orders.filter(o=>o["Driver ID"]===actor.driver_id):orders;
