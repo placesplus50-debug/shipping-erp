@@ -75,12 +75,13 @@ window.SP = (() => {
       if(!me.authenticated||!user)throw Error('session');
       document.getElementById('username').textContent=user.name||'حساب المستخدم';
       document.getElementById('usersNav').hidden=user.role!=='super_admin';
+      const checkNav=document.getElementById('systemCheckNav');if(checkNav)checkNav.hidden=user.role!=='super_admin';
       if(user.role==='driver'){
         document.querySelectorAll('[data-staff]').forEach(link=>link.hidden=true);
         document.querySelector('.sp-brand').href='/driver.html';
         if(page!=='driver'){location.replace('/driver.html');return null}
       }
-      if(page==='users'&&user.role!=='super_admin'){
+      if((page==='users'||page==='system-check')&&user.role!=='super_admin'){
         status.hidden=false;status.textContent='إدارة المستخدمين متاحة للمدير الرئيسي فقط.';
         document.getElementById('spMain').hidden=true;return null;
       }
