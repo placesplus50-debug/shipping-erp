@@ -26,7 +26,7 @@ export function mapPreview({sourceId,headers,rows,mapping,limit=200}){
   const key=JSON.stringify([sourceId,id]);
   if(seen.has(key)){duplicates.push({row:i+2,externalOrderId:id});continue}
   seen.add(key);
-  if(!order.customer||!order.driverId||!Number.isFinite(Number(order.codDue.replace(/,/g,"")))){invalid.push({row:i+2,reason:"Missing customer/driver or invalid COD"});continue}
+  if(!order.customer||!order.driverId||!order.codDue||!/^(?:0|[1-9]\\d*)(?:\\.\\d{1,2})?$/.test(order.codDue.replace(/,/g,""))||!Number.isFinite(Number(order.codDue.replace(/,/g,"")))){invalid.push({row:i+2,reason:"Missing customer/driver or invalid COD"});continue}
   order.externalKey=key;
   orders.push(order);
  }
