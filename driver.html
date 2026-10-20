@@ -72,6 +72,15 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
  .driver-view .inmap-map{height:270px}
  .driver-view .stat strong{font-size:clamp(18px,5vw,25px)}
 }
+</style><style>
+.driver-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.driver-summary>div{background:#fff;border:1px solid #e7e0f0;border-radius:15px;padding:13px;min-width:0;display:grid;gap:5px}
+.driver-summary span{font-size:12px;color:#736584;font-weight:700}
+.driver-summary strong{font-size:clamp(18px,4vw,27px);color:#2c1c47}
+.driver-filter-actions{display:flex;justify-content:flex-end;margin:4px 0 14px}
+.driver-filter-actions button{font-size:12px}
+.driver-network{background:#fff1d9;color:#69440a;border:1px solid #e6bd78;border-radius:12px;padding:12px 15px;margin:0 0 16px;font-weight:700}
+@media(max-width:480px){.driver-summary{gap:7px}.driver-summary>div{padding:10px}.driver-summary span{font-size:11px}}
 </style></head><body class="sp-app sp-page-driver" data-page="driver"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav" href="/collections.html" data-staff><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a><a class="sp-nav active" href="#overview" data-driver-section="overview" aria-current="page"><span aria-hidden="true">⌂</span>الرئيسية</a><a class="sp-nav" href="#shipments" data-driver-section="shipments"><span aria-hidden="true">▦</span>شحناتي</a><a class="sp-nav" href="#route" data-driver-section="route"><span aria-hidden="true">⌖</span>خط السير والخريطة</a><a class="sp-nav" href="#collections" data-driver-section="collections"><span aria-hidden="true">▤</span>التحصيلات</a><a class="sp-nav" href="/system-check.html" id="systemCheckNav" data-staff hidden><span aria-hidden="true">✓</span>فحص النظام</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Production</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / شحناتي</small><h1>شحناتي</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog>
 
 <main id="spMain" tabindex="-1"><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
@@ -104,6 +113,17 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
  const loc=main.querySelector('.location-toolbar');if(loc)views.route.append(loc);
  const locNote=main.querySelector('.location-note');if(locNote)views.route.append(locNote);
  move('insideMapPanel','route');move('routePlan','route');
+ const summary=document.createElement('div');summary.className='driver-summary';summary.setAttribute('aria-live','polite');
+ summary.innerHTML='<div><span>تم التسليم</span><strong id="driverDeliveredCount">—</strong></div><div><span>متبقي للتسليم</span><strong id="driverPendingCount">—</strong></div><div><span>محطات بخريطة</span><strong id="driverMappedCount">—</strong></div>';
+ const firstShortcut=views.overview.querySelector('.driver-shortcuts');if(firstShortcut)views.overview.insertBefore(summary,firstShortcut);
+ const filterActions=document.createElement('div');filterActions.className='driver-filter-actions';
+ const reset=document.createElement('button');reset.type='button';reset.className='secondary';reset.textContent='✕ مسح البحث والفلاتر';reset.addEventListener('click',()=>{el('search').value='';el('filter').value='';el('search').dispatchEvent(new Event('input'))});
+ filterActions.append(reset);views.shipments.insertBefore(filterActions,el('orders'));
+ const network=document.createElement('div');network.className='driver-network';network.setAttribute('role','status');network.hidden=true;
+ network.textContent='لا يوجد اتصال بالإنترنت. البيانات المعروضة قديمة، ولا يمكن حفظ تحديثات جديدة حتى يعود الاتصال.';
+ main.prepend(network);
+ const updateNetwork=()=>{network.hidden=navigator.onLine!==false};
+ window.addEventListener('online',()=>{updateNetwork();el('reload')?.click()});window.addEventListener('offline',updateNetwork);updateNetwork();
  const collectionInfo=document.createElement('div');collectionInfo.className='notice';collectionInfo.textContent='يمكنك تسجيل تحصيل كل شحنة من قسم شحناتي. المبالغ المعروضة هنا للمتابعة فقط، والاعتماد يتم من الحسابات.';
  views.collections.append(collectionInfo);
  const amount=document.createElement('div');amount.className='stat';amount.innerHTML='<small>المتبقي غير المسجل للتحصيل</small><strong id="driverCollectionTotal">—</strong>';views.collections.append(amount);
@@ -447,6 +467,11 @@ async function load(){
  claims=claimData.collections;
  historyComplete=!claimData.truncated;
  if(!historyComplete)throw Error('سجل التحصيل تجاوز حد العرض؛ تم إيقاف تسجيل تحصيلات جديدة لحماية الأرصدة');
+ const delivered=orders.filter(o=>/^(delivered|تم التسليم|تم التوصيل)$/i.test(String(o._effectiveStatus||o['Shipping Status']||'').trim())).length;
+ const pending=orders.filter(o=>!/(delivered|returned|cancelled|canceled|تم التسليم|تم التوصيل|مرتجع|ملغي)/i.test(String(o._effectiveStatus||o['Shipping Status']||''))).length;
+ const mapped=orders.filter(o=>preciseLocation(o)).length;
+ const put=(id,value)=>{const node=document.getElementById(id);if(node)node.textContent=fmt(value)};
+ put('driverDeliveredCount',delivered);put('driverPendingCount',pending);put('driverMappedCount',mapped);
  $('count').textContent=fmt(orders.length);
  $('cod').textContent=fmt(orders.filter(o=>!['Returned','Delivery failed'].includes(o._effectiveStatus)).reduce((s,o)=>s+remaining(o),0))+' ج.م';
  const selected=$('filter').value;const states=[...new Set(orders.map(o=>o._effectiveStatus||o['Shipping Status']).filter(Boolean))];
