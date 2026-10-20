@@ -111,13 +111,13 @@ function openRoute(items,origin){
  window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer');
 }
 let insideMap=null,insideMapLayers=[],insideMapWatch=null,insideMapPosition=null;
-let insideMapRequest=0,insideMapLastRouteAt=0,insideMapLastOrigin=null,insideMapLastOrder='',insideMapRouteTimer=null;
+let insideMapRequest=0,insideMapLastRouteAt=0,insideMapLastOrigin=null,insideMapLastOrder='',insideMapRouteTimer=null,insideMapRouteLine=null,insideMapFallbackLine=null,insideMapPin=null,insideMapDriverPin=null,insideMapRouteReady=false;
 function stopInsideMapWatch(){if(insideMapWatch!==null&&navigator.geolocation)navigator.geolocation.clearWatch(insideMapWatch);insideMapWatch=null}
-function resetInsideMapRoute(){insideMapRequest++;clearTimeout(insideMapRouteTimer);insideMapRouteTimer=null;insideMapLastOrigin=null;insideMapLastOrder='';insideMapLastRouteAt=0}
+function resetInsideMapRoute(){insideMapRequest++;clearTimeout(insideMapRouteTimer);insideMapRouteTimer=null;insideMapLastOrigin=null;insideMapLastOrder='';insideMapLastRouteAt=0;insideMapRouteReady=false;if(insideMapRouteLine){insideMapRouteLine.remove();insideMapRouteLine=null}if(insideMapFallbackLine){insideMapFallbackLine.remove();insideMapFallbackLine=null}}
 function drawInsideMapRoute(point,orderId){
  if(!insideMapPosition||!insideMap)return;
  const origin=insideMapPosition,now=Date.now();
- if(insideMapLastOrder===orderId&&insideMapLastOrigin&&distanceKm(origin,insideMapLastOrigin)<0.12)return;
+ if(insideMapLastOrder===orderId&&insideMapLastOrigin&&distanceKm(origin,insideMapLastOrigin)<0.12&&insideMapRouteReady)return;
  if(now-insideMapLastRouteAt<15000){
   clearTimeout(insideMapRouteTimer);
   insideMapRouteTimer=setTimeout(()=>drawInsideMapRoute(point,orderId),15000-(now-insideMapLastRouteAt));
@@ -132,15 +132,17 @@ function drawInsideMapRoute(point,orderId){
   if(request!==insideMapRequest||$('insideMapPanel').hidden||$('insideMapPanel').dataset.orderId!==orderId)return;
   const route=data.routes&&data.routes[0];
   if(!route||!route.geometry||!Array.isArray(route.geometry.coordinates))throw Error('route missing');
-  insideMapLayers.filter(l=>l._isDriverRoute).forEach(l=>{insideMap.removeLayer(l);insideMapLayers=insideMapLayers.filter(x=>x!==l)});
-  const line=L.polyline(route.geometry.coordinates.map(p=>[p[1],p[0]]),{color:'#5842a8',weight:5,opacity:.85}).addTo(insideMap);
-  line._isDriverRoute=true;insideMapLayers.push(line);
-  insideMap.fitBounds(line.getBounds(),{padding:[30,30],maxZoom:16});
+  if(insideMapRouteLine)insideMapRouteLine.remove();
+  insideMapRouteLine=L.polyline(route.geometry.coordinates.map(p=>[p[1],p[0]]),{color:'#5842a8',weight:5,opacity:.85}).addTo(insideMap);
+  insideMapRouteReady=true;
+  if(insideMapFallbackLine){insideMapFallbackLine.remove();insideMapFallbackLine=null}
+  insideMap.fitBounds(insideMapRouteLine.getBounds(),{padding:[30,30],maxZoom:16});
   const km=(route.distance/1000).toFixed(1),minutes=Math.max(1,Math.round(route.duration/60));
   $('insideMapStatus').textContent='🚗 المسافة على الطريق: '+km+' كم • الوقت التقديري: '+minutes+' دقيقة (بدون بيانات زحمة مباشرة)';
  }).catch(()=>{
   if(request!==insideMapRequest||$('insideMapPanel').hidden)return;
-  $('insideMapStatus').textContent='تعذر حساب مسار الشوارع الآن. الخط المتقطع تقريبي؛ استخدم Google Maps للملاحة.';
+  insideMapRouteReady=false;
+  $('insideMapStatus').textContent='تعذر حساب مسار الشوارع الآن. '+(insideMapRouteLine?'آخر مسار متاح ظاهر على الخريطة.':'الخط المتقطع تقريبي؛ استخدم Google Maps للملاحة.');
  }).finally(()=>clearTimeout(timeout));
 }
 function showInsideMap(order){
@@ -152,13 +154,16 @@ function showInsideMap(order){
  if(!point){$('insideMapStatus').textContent='الموقع لا يحتوي على إحداثيات دقيقة؛ استخدم Google Maps.';return}
  if(!window.L){$('insideMapStatus').textContent='الخريطة غير متاحة حاليًا؛ استخدم Google Maps.';return}
  if(!insideMap){insideMap=L.map('insideMap');L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(insideMap)}
- insideMapLayers.forEach(layer=>insideMap.removeLayer(layer));insideMapLayers=[];
- insideMapLayers.push(L.marker(point).addTo(insideMap).bindPopup('موقع الشحنة'));
+ if(!insideMapPin)insideMapPin=L.marker(point).addTo(insideMap).bindPopup('موقع الشحنة');
+ else insideMapPin.setLatLng(point);
  if(insideMapPosition){
-  insideMapLayers.push(L.circleMarker(insideMapPosition,{radius:8,color:'#5842a8',fillColor:'#d2ec6d',fillOpacity:1}).addTo(insideMap).bindPopup('موقعي'));
-  const fallback=L.polyline([insideMapPosition,point],{color:'#5842a8',dashArray:'7,8',opacity:.6}).addTo(insideMap);
-  fallback._isDriverRoute=true;insideMapLayers.push(fallback);
-  insideMap.fitBounds([insideMapPosition,point],{padding:[30,30],maxZoom:15});
+  if(!insideMapDriverPin)insideMapDriverPin=L.circleMarker(insideMapPosition,{radius:8,color:'#5842a8',fillColor:'#d2ec6d',fillOpacity:1}).addTo(insideMap).bindPopup('موقعي');
+  else insideMapDriverPin.setLatLng(insideMapPosition);
+  if(!insideMapRouteLine){
+   if(!insideMapFallbackLine)insideMapFallbackLine=L.polyline([insideMapPosition,point],{color:'#5842a8',dashArray:'7,8',opacity:.6}).addTo(insideMap);
+   else insideMapFallbackLine.setLatLngs([insideMapPosition,point]);
+  }
+  if(!insideMapRouteReady)insideMap.fitBounds([insideMapPosition,point],{padding:[30,30],maxZoom:15});
   drawInsideMapRoute(point,orderId);
  }else{$('insideMapStatus').textContent='اضغط متابعة موقعي لحساب مسار القيادة والمسافة والوقت المتوقع.';insideMap.setView(point,14)}
  requestAnimationFrame(()=>insideMap.invalidateSize());
