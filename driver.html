@@ -416,6 +416,25 @@ body.sp-page-driver .driver-quick-filters button span:first-child{font-size:13px
 body.sp-page-driver .sp-mock-cod-panel strong{color:#d6ee73!important}
 body.sp-page-driver .sp-mock-route-panel strong{color:#fff!important}
 }
+</style><style id="sp-order-details-dialog-style">
+@media(max-width:900px){
+body.sp-page-driver #orders .card>.map-link{grid-column:4!important;grid-row:1!important;width:31px!important;height:31px!important;min-width:31px!important;min-height:31px!important;display:grid!important;place-items:center!important;border:0!important;border-radius:50%!important;padding:0!important;margin:0!important;background:#ede7fa!important;color:#5533a9!important;font-size:25px!important;line-height:1!important;font-weight:700!important;box-shadow:none!important}
+body.sp-page-driver #orders .card>.map-link:after{content:none!important}
+body.sp-page-driver #orders .card>.map-link:focus-visible{outline:2px solid #6c48c9!important;outline-offset:2px!important}
+body.sp-page-driver .sp-order-overlay{position:fixed;inset:0;z-index:100500;background:#1b113a99;display:flex;align-items:flex-end;justify-content:center;padding:10px;box-sizing:border-box}
+body.sp-page-driver .sp-order-dialog{background:#fff;color:#291846;border-radius:23px 23px 16px 16px;width:min(100%,500px);max-height:85dvh;overflow:auto;padding:18px;box-sizing:border-box;box-shadow:0 18px 50px #1a0d3640;direction:rtl}
+body.sp-page-driver .sp-order-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+body.sp-page-driver .sp-order-dialog h2{font-size:18px;margin:0;color:#281744}
+body.sp-page-driver .sp-order-dialog .sp-order-close{border:0;border-radius:50%;background:#eee9f9;color:#4a2c86;width:36px;height:36px;font-size:22px}
+body.sp-page-driver .sp-order-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+body.sp-page-driver .sp-order-field{border:1px solid #ebe6f2;border-radius:12px;background:#faf8ff;padding:10px;min-width:0;overflow-wrap:anywhere}
+body.sp-page-driver .sp-order-field small{display:block;color:#82758e;font-size:11px;margin-bottom:4px}
+body.sp-page-driver .sp-order-field strong{font-size:13px;font-weight:700}
+body.sp-page-driver .sp-order-wide{grid-column:1/-1}
+body.sp-page-driver .sp-order-links{display:flex;gap:8px;margin-top:14px}
+body.sp-page-driver .sp-order-links a{display:flex;align-items:center;justify-content:center;flex:1;min-height:44px;border-radius:12px;background:#5a37ba;color:#fff;text-decoration:none;font-size:13px;font-weight:700}
+body.sp-page-driver .sp-order-links a[hidden]{display:none}
+}
 </style></head><body class="sp-app sp-page-driver" data-page="driver"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav" href="/collections.html" data-staff><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a><a class="sp-nav active" href="#overview" data-driver-section="overview" aria-current="page"><span aria-hidden="true">⌂</span>الرئيسية</a><a class="sp-nav" href="#shipments" data-driver-section="shipments"><span aria-hidden="true">▦</span>شحناتي</a><a class="sp-nav" href="#route" data-driver-section="route"><span aria-hidden="true">⌖</span>خط السير والخريطة</a><a class="sp-nav" href="#collections" data-driver-section="collections"><span aria-hidden="true">▤</span>التحصيلات</a><a class="sp-nav" href="/system-check.html" id="systemCheckNav" data-staff hidden><span aria-hidden="true">✓</span>فحص النظام</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Production</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / شحناتي</small><h1>شحناتي</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog>
 
 <main id="spMain" tabindex="-1"><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
@@ -736,7 +755,7 @@ function render(){
  const details=node('div','details');
  details.append(node('span','', '📍 '+(o['City / Area']||'—')),node('span','', '💳 '+(o['Payment Type']||'—')),node('span','', 'حالة الدفع: '+(claims.some(c=>c.order_id===o['Order ID']&&c.decision==='approved')?(remaining(o)===0?'التحصيل معتمد بالكامل':'تحصيل معتمد جزئيًا'):claims.some(c=>c.order_id===o['Order ID']&&!c.decision)?'تحصيل بانتظار المراجعة':(o['Payment Status']||'—'))));
  c.append(details);
- if(mapLink(o)){const locationLink=node('a','',preciseLocation(o)?'📍 ملاحة إلى موقع العميل':'📍 عرض الموقع التقريبي — يحتاج تأكيد');locationLink.href=mapLink(o);locationLink.target='_blank';locationLink.rel='noopener noreferrer';locationLink.className='map-link';c.append(locationLink)}
+ const detailButton=node('button','map-link','›');detailButton.type='button';detailButton.setAttribute('aria-label','عرض تفاصيل الشحنة '+String(o['Order ID']||''));detailButton.addEventListener('click',()=>openDriverOrderDetails(o));c.append(detailButton);
  const finalReturn=(o._effectiveStatus||o['Shipping Status'])==='Returned';
  const amount=node('div','money',finalReturn?'مرتجع — لا يوجد تحصيل مطلوب':(o._effectiveStatus==='Delivery failed'?'تعذر التسليم — لا تحصيل حتى إعادة التسليم':'المتبقي غير المسجل: '+fmt(remaining(o))+' ج.م'));c.append(amount);
  if(o.Notes)c.append(node('div','note','ملاحظات: '+o.Notes));
@@ -999,5 +1018,26 @@ if(nav)for(const a of nav.querySelectorAll('a')){const key=a.dataset.driverSecti
 const keys=['box','check','truck','return'];document.querySelectorAll('.sp-mock-kpi .k-icon').forEach((el,i)=>{el.replaceChildren(svg(keys[i]||'box'))});
 document.querySelectorAll('.sp-mock-panel').forEach((el,i)=>{const label=el.querySelector('span');if(!label)return;label.textContent=i===0?'خط السير اليوم':'قيمة التحصيل اليوم';label.prepend(svg(i===0?'route':'wallet'))});
 const money=document.getElementById('mockCod');if(money)money.setAttribute('aria-label','ملخص التحصيل بحسب السجلات');
+})();
+</script><script id="sp-order-details-dialog">
+(function(){
+window.openDriverOrderDetails=function(o){
+const overlay=document.createElement('div');overlay.className='sp-order-overlay';overlay.setAttribute('role','presentation');
+const dialog=document.createElement('section');dialog.className='sp-order-dialog';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','تفاصيل الشحنة');
+const head=document.createElement('div');head.className='sp-order-dialog-head';const title=document.createElement('h2');title.textContent='تفاصيل الشحنة '+String(o['Order ID']||'—');
+const close=document.createElement('button');close.className='sp-order-close';close.type='button';close.textContent='×';close.setAttribute('aria-label','إغلاق التفاصيل');head.append(title,close);dialog.append(head);
+const grid=document.createElement('div');grid.className='sp-order-grid';
+function field(label,value,wide){const box=document.createElement('div');box.className='sp-order-field'+(wide?' sp-order-wide':'');const l=document.createElement('small');l.textContent=label;const v=document.createElement('strong');v.textContent=String(value??'—')||'—';box.append(l,v);grid.append(box)}
+field('العميل',o.Customer);field('رقم الهاتف',o.Phone);field('المنطقة',o['City / Area']);field('حالة الشحنة',o._effectiveStatus||o['Shipping Status']);field('طريقة الدفع',o['Payment Type']);field('إجمالي الطلب',o['Order Total']);field('المدفوع مسبقًا',o['Prepaid Amount']);field('المطلوب عند التسليم (COD)',o['COD Due']);field('حالة الدفع',o['Payment Status']);if(o.Notes)field('ملاحظات الشحنة',o.Notes,true);
+dialog.append(grid);
+const links=document.createElement('div');links.className='sp-order-links';
+const map=typeof mapLink==='function'?mapLink(o):'';if(map){const a=document.createElement('a');a.href=map;a.target='_blank';a.rel='noopener noreferrer';a.textContent='📍 فتح موقع العميل';links.append(a)}
+const phone=String(o.Phone||'').replace(/[^\d+]/g,'');if(phone){const a=document.createElement('a');a.href='tel:'+phone;a.textContent='☎ الاتصال بالعميل';links.append(a)}
+if(links.children.length)dialog.append(links);
+overlay.append(dialog);document.body.append(overlay);const prev=document.body.style.overflow;document.body.style.overflow='hidden';
+function dismiss(){overlay.remove();document.body.style.overflow=prev;document.removeEventListener('keydown',onKey)}
+function onKey(e){if(e.key==='Escape')dismiss()}
+close.onclick=dismiss;overlay.addEventListener('click',e=>{if(e.target===overlay)dismiss()});document.addEventListener('keydown',onKey);close.focus();
+};
 })();
 </script></body></html>
