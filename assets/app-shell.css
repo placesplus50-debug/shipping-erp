@@ -32,3 +32,27 @@ body.sp-app{margin:0;padding:0 var(--sp-side) 0 0;background:var(--sp-bg);color:
 @media(max-width:800px){body.sp-app{padding:0}.sp-app .sp-sidebar{transform:translateX(100%);visibility:hidden;transition:transform .2s,visibility .2s;width:min(286px,85vw)}.sp-menu-open .sp-sidebar{transform:translateX(0);visibility:visible}.sp-app #spMenu{display:inline-flex;align-items:center;justify-content:center;width:42px;padding:6px;font-size:21px;background:#eee9f6;color:var(--sp-purple)}.sp-app .sp-header{padding:14px 16px;gap:12px}.sp-header h1{font-size:20px}.sp-app main,.sp-app main.wrap{padding:20px 16px 40px}.sp-app .sp-account{width:100%;justify-content:flex-end}.sp-account #username{margin-inline-end:auto}.sp-app .grid,.sp-app .insights{grid-template-columns:1fr}.sp-app .stats,.sp-app .cards,.sp-app .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.sp-app .toolbar input{min-width:0;width:100%;flex-basis:100%}.sp-app .toolbar select{min-width:0;flex:1}.sp-app .hero-icon{display:none}.sp-app .panel{padding:18px}.sp-app .metric strong{font-size:20px;white-space:normal}.sp-app .pulsehero{padding:24px 20px}.sp-app .pulsehero h2{font-size:27px}.sp-app #spShellStatus{margin:16px}}
 @media(max-width:480px){.sp-app .detail-grid{grid-template-columns:1fr}.sp-app .permissions{grid-template-columns:1fr}.sp-app .stats,.sp-app .cards,.sp-app .metrics{gap:10px}.sp-app .metric,.sp-app .stat,.sp-app .card{padding:15px}.sp-app .hero{padding:22px}.sp-app .hero h2{font-size:22px}.sp-app .sp-header h1{font-size:18px}.sp-login main{padding:26px!important}.sp-app dialog .modal-body{padding:18px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+
+/* Mobile app polish: safe areas, readable KPI cards and scrollable data */
+@media(max-width:800px){
+ html{overflow-x:hidden}
+ body.sp-app{width:100%;max-width:100vw;overflow-x:clip}
+ .sp-app .sp-sidebar{inset:0 0 0 auto;max-width:85vw;box-shadow:-12px 0 35px #1b143344}
+ .sp-app .sp-header{flex-wrap:wrap;align-items:center;padding-top:max(12px,env(safe-area-inset-top));}
+ .sp-app .sp-title-group{min-width:0;flex:1 1 100%;display:flex;align-items:center;gap:10px}
+ .sp-app .sp-account{flex-wrap:wrap;gap:8px}
+ .sp-app #username{margin-inline-end:auto;overflow:hidden;text-overflow:ellipsis}
+ .sp-app main,.sp-app main.wrap{min-width:0;max-width:100vw}
+ .sp-app :is(.panel,.card,.metric,.stat){min-width:0;overflow-wrap:anywhere}
+ .sp-app :is(.card,.metric,.stat) strong{font-size:clamp(19px,5vw,27px);line-height:1.3;overflow-wrap:anywhere}
+ .sp-app :is(.tablewrap,.table-scroll,.scroll){width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+ .sp-app table{max-width:none;white-space:nowrap}
+ .sp-app :is(input,select,button){max-width:100%;min-height:40px}
+ .sp-app :is(.filters,.filter-row,.toolbar){flex-wrap:wrap;max-width:100%}
+}
+@media(max-width:420px){
+ .sp-app .sp-header{padding-inline:12px}
+ .sp-app main,.sp-app main.wrap{padding-inline:12px}
+ .sp-app .stats,.sp-app .cards,.sp-app .metrics{gap:9px}
+ .sp-app :is(.card,.metric,.stat){padding:12px}
+}
