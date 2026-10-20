@@ -183,7 +183,7 @@ $('insideMapFollow').onclick=()=>{
   if(shareLiveEnabled&&Date.now()-lastLiveSent>15000){lastLiveSent=Date.now();sendLiveLocation({sharing:true,latitude:insideMapPosition[0],longitude:insideMapPosition[1],accuracy:insideMapAccuracy})}
   const order=orders.find(o=>String(o['Order ID'])===$('insideMapPanel').dataset.orderId);
   if(order)showInsideMap(order);
- },()=>{$('insideMapStatus').textContent='تعذر الوصول لموقعك.';stopInsideMapWatch()},{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
+ },err=>{$('insideMapStatus').textContent=err?.code===1?'صلاحية الموقع مرفوضة. فعّل إذن الموقع للتطبيق من إعدادات الهاتف ثم أعد المحاولة.':err?.code===2?'الموقع غير متاح. تأكد من تشغيل GPS وخدمات الموقع.':'تحديد الموقع استغرق وقتًا طويلًا. حاول مرة أخرى في مكان مفتوح.';stopInsideMapWatch()},{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
 };
 window.addEventListener('pagehide',()=>{if(shareLiveEnabled)navigator.sendBeacon?.('/api/driver-live-location',new Blob([JSON.stringify({sharing:false})],{type:'application/json'}));stopInsideMapWatch();resetInsideMapRoute()});
 let plannedStops=[];
