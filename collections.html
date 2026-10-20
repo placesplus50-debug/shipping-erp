@@ -29,7 +29,7 @@ body{font-family:Cairo,Tahoma,Arial,sans-serif!important;background:#f8f7fc!impo
 body>header{background:#fff!important;color:#251741!important;border-bottom:1px solid #e9e4f0;box-shadow:none!important}
 body>header a{color:#5842a8!important}
 @media(max-width:800px){body{padding-right:0}.sp-shell-side{position:relative;width:100%;height:auto;padding:10px;display:flex;gap:5px;flex-wrap:wrap}.sp-shell-brand{width:100%;padding:3px}.sp-shell-side>a{padding:7px 9px;font-size:11px;margin:0}.sp-shell-foot{display:none}}
-</style><link rel="stylesheet" href="/assets/app-shell.css"><script src="/assets/app-shell.js"></script></head><body class="sp-app sp-page-collections" data-page="collections"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav active" href="/collections.html" data-staff aria-current="page"><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Production</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / التحصيلات وكشوف الحساب</small><h1>التحصيلات وكشوف الحساب</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog><main id="spMain" tabindex="-1"><div class="topbar"><div><h1>تحصيل المندوبين</h1><p class="intro">إدارة التحصيلات والعهدة النقدية • البيانات من D1 مع مزامنة Google Sheets عند تفعيلها</p></div><div class="topactions"><button id="reload" class="secondary">↻ تحديث</button><button id="export">↓ تصدير CSV</button></div></div><div class="stats" id="summary">جارٍ التحميل...</div><div class="panel" id="breakdown"><div class="panel-head"><h2>ملخص التحصيل حسب المندوب والطريقة</h2></div><div id="groups" class="tablewrap">جارٍ التحميل...</div></div><div class="panel"><div class="panel-head"><h2>كشف حساب المندوب</h2></div><label for="driverStatement">اختر المندوب: </label><select id="driverStatement"><option value="">كل المندوبين</option></select> <button id="statementExport">تصدير كشف الحساب CSV</button><div id="statement" style="overflow-x:auto;margin-top:12px"></div></div><div class="toolbar"><h2>عمليات التحصيل</h2><input id="search" aria-label="بحث التحصيلات" placeholder="ابحث بالشحنة أو المندوب"></div><section id="list"></section><p id="error"></p></main><script>
+</style><style>@media print{.sp-sidebar,.sp-header,.topactions,.toolbar,#list,#breakdown,#summary,#error,#statementExport,#statementPrint{display:none!important}body{padding:0!important;background:white!important}main{padding:0!important}.panel{border:0;box-shadow:none!important}#statement{overflow:visible!important}#statement table{font-size:10px}#statement .stats{grid-template-columns:repeat(4,1fr)!important}}</style><link rel="stylesheet" href="/assets/app-shell.css"><script src="/assets/app-shell.js"></script></head><body class="sp-app sp-page-collections" data-page="collections"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav active" href="/collections.html" data-staff aria-current="page"><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Production</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / التحصيلات وكشوف الحساب</small><h1>التحصيلات وكشوف الحساب</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog><main id="spMain" tabindex="-1"><div class="topbar"><div><h1>تحصيل المندوبين</h1><p class="intro">إدارة التحصيلات والعهدة النقدية • البيانات من D1 مع مزامنة Google Sheets عند تفعيلها</p></div><div class="topactions"><button id="reload" class="secondary">↻ تحديث</button><button id="export">↓ تصدير CSV</button></div></div><div class="stats" id="summary">جارٍ التحميل...</div><div class="panel" id="breakdown"><div class="panel-head"><h2>ملخص التحصيل حسب المندوب والطريقة</h2></div><div id="groups" class="tablewrap">جارٍ التحميل...</div></div><div class="panel"><div class="panel-head"><h2>كشف حساب المندوب</h2></div><label for="driverStatement">اختر المندوب: </label><select id="driverStatement"><option value="">كل المندوبين</option></select> <label for="statementFrom">من</label> <input id="statementFrom" type="date" style="width:auto"> <label for="statementTo">إلى</label> <input id="statementTo" type="date" style="width:auto"> <button id="statementExport">تصدير كشف الحساب Excel (CSV)</button> <button id="statementPrint" class="secondary">طباعة / PDF</button><div id="statement" style="overflow-x:auto;margin-top:12px"></div></div><div class="toolbar"><h2>عمليات التحصيل</h2><input id="search" aria-label="بحث التحصيلات" placeholder="ابحث بالشحنة أو المندوب"></div><section id="list"></section><p id="error"></p></main><script>
 let rows=[];const el=id=>document.getElementById(id);
 const fmt=c=>new Intl.NumberFormat('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2}).format(c/100);
 function render(){
@@ -110,39 +110,64 @@ function statementRows(){
  }
  return events.sort((a,b)=>String(a.date).localeCompare(String(b.date))||a.sort-b.sort||a.reference.localeCompare(b.reference));
 }
-function statementLedger(){
- const balances=new Map();
- return statementRows().map(e=>{const balance=(balances.get(e.driver)||0)+e.inflow-e.outflow;balances.set(e.driver,balance);return {...e,balance}});
+function cairoDate(value){
+ if(!value)return '';
+ const raw=String(value).trim();
+ const iso=/^\\d{4}-\\d{2}-\\d{2}$/.test(raw)?raw+'T00:00:00Z':raw.replace(' ','T')+(raw.includes('Z')||/[+-]\\d\\d:\\d\\d$/.test(raw)?'':'Z');
+ const dt=new Date(iso);
+ return Number.isNaN(dt.getTime())?raw.slice(0,10):new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Cairo',year:'numeric',month:'2-digit',day:'2-digit'}).format(dt);
+}
+function statementData(){
+ const driver=el('driverStatement').value,from=el('statementFrom').value,to=el('statementTo').value;
+ const balances=new Map(),opening=new Map(),visible=[];
+ for(const e of statementRows()){
+  const date=cairoDate(e.date);
+  if(from&&date<from){opening.set(e.driver,(opening.get(e.driver)||0)+e.inflow-e.outflow);continue}
+  if(to&&date>to)continue;
+  const balance=(balances.has(e.driver)?balances.get(e.driver):(opening.get(e.driver)||0))+e.inflow-e.outflow;
+  balances.set(e.driver,balance);visible.push({...e,date, balance});
+ }
+ const allDrivers=driver?[driver]:[...new Set([...opening.keys(),...balances.keys()])];
+ const openingTotal=allDrivers.reduce((n,d)=>n+(opening.get(d)||0),0);
+ const collected=visible.reduce((n,e)=>n+e.inflow,0),remitted=visible.reduce((n,e)=>n+e.outflow,0);
+ return {visible,openingTotal,collected,remitted,closing:openingTotal+collected-remitted,driver,from,to};
 }
 function renderStatement(){
- const root=el('statement');root.replaceChildren();const data=statementLedger();
- const table=document.createElement('table');table.style.width='100%';table.style.borderCollapse='collapse';
- const headers=['تاريخ الحركة','المندوب','الشحنة','الحركة','مرجع','تحصيل معتمد','توريد','رصيد عهدة المندوب'];
- const thead=document.createElement('thead'),tr=document.createElement('tr');
- for(const h of headers){const th=document.createElement('th');th.textContent=h;th.style.padding='9px';th.style.textAlign='right';tr.append(th)}thead.append(tr);table.append(thead);
- const body=document.createElement('tbody');
- for(const e of data){const row=document.createElement('tr');
-  for(const val of [e.date,e.driver,e.order,e.type,e.reference,fmt(e.inflow),fmt(e.outflow),fmt(e.balance)]){
-   const td=document.createElement('td');td.textContent=val;td.style.padding='9px';td.style.borderTop='1px solid #eee';row.append(td);
-  }body.append(row);
+ const root=el('statement');root.replaceChildren();
+ const data=statementData();
+ const summary=document.createElement('div');summary.className='stats';summary.style.gridTemplateColumns='repeat(auto-fit,minmax(170px,1fr))';
+ for(const [label,value] of [['رصيد أول المدة',data.openingTotal],['تحصيلات الفترة',data.collected],['توريدات الفترة',data.remitted],['رصيد آخر المدة',data.closing]]){
+  const c=document.createElement('div');c.className='metric';const t=document.createElement('small');t.textContent=label;const n=document.createElement('strong');n.textContent=fmt(value)+' ج.م';c.append(t,n);summary.append(c)
  }
- table.append(body);
- if(!data.length){root.textContent='لا توجد حركات عهدة نقدية معتمدة لهذا المندوب';return}
- const totals=new Map();for(const e of data)totals.set(e.driver,e.balance);
- const summary=document.createElement('p');summary.textContent='إجمالي العهدة النقدية غير الموردة: '+fmt([...totals.values()].reduce((a,b)=>a+b,0))+' ج.م';root.append(summary,table);
+ root.append(summary);
+ if(!data.visible.length){const msg=document.createElement('p');msg.textContent='لا توجد حركات في الفترة المحددة';root.append(msg);return}
+ const table=document.createElement('table');table.style.width='100%';
+ const headers=['تاريخ الحركة (القاهرة)','المندوب','الشحنة','الحركة','مرجع','تحصيل معتمد','توريد','رصيد عهدة المندوب'];
+ const thead=document.createElement('thead'),tr=document.createElement('tr');
+ for(const h of headers){const th=document.createElement('th');th.textContent=h;tr.append(th)}thead.append(tr);table.append(thead);
+ const body=document.createElement('tbody');
+ for(const e of data.visible){const row=document.createElement('tr');
+  for(const val of [e.date,e.driver,e.order,e.type,e.reference,fmt(e.inflow),fmt(e.outflow),fmt(e.balance)]){const td=document.createElement('td');td.textContent=val;row.append(td)}body.append(row)
+ }
+ table.append(body);root.append(table);
+}
+function statementCsv(){
+ const data=statementData();
+ const lines=[['Driver','From','To','Opening EGP','Collections EGP','Remittances EGP','Closing EGP'],[data.driver||'All',data.from,data.to,(data.openingTotal/100).toFixed(2),(data.collected/100).toFixed(2),(data.remitted/100).toFixed(2),(data.closing/100).toFixed(2)],[],['Date Cairo','Driver','Order','Movement','Reference','Approved cash EGP','Cash handed over EGP','Driver cash balance EGP'],...data.visible.map(e=>[e.date,e.driver,e.order,e.type,e.reference,(e.inflow/100).toFixed(2),(e.outflow/100).toFixed(2),(e.balance/100).toFixed(2)])];
+ return '\\uFEFF'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\\r\\n');
 }
 function exportStatement(){
  const d=el('driverStatement').value;
- const lines=[['Event time','Driver','Order','Movement','Reference','Approved cash EGP','Cash handed over EGP','Driver cash balance EGP'],...statementLedger().map(e=>[e.date,e.driver,e.order,e.type,e.reference,(e.inflow/100).toFixed(2),(e.outflow/100).toFixed(2),(e.balance/100).toFixed(2)])];
- const csv='\uFEFF'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
- const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='driver-statement-'+(d||'all')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([statementCsv()],{type:'text/csv;charset=utf-8'}));a.download='driver-statement-'+(d||'all')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 el('driverStatement').addEventListener('change',renderStatement);
+el('statementFrom').addEventListener('change',renderStatement);
+el('statementTo').addEventListener('change',renderStatement);
 el('statementExport').addEventListener('click',exportStatement);
-
+el('statementPrint').addEventListener('click',()=>window.print());
 el('reload').onclick=load;el('search').oninput=render;el('export').onclick=()=>{
  const lines=[['ID','Order','Driver','Amount EGP','Method','Holder','Decision','Created'],...rows.map(r=>[r.id,r.order_id,r.driver_id,(r.amount_cents/100).toFixed(2),r.method,r.holder,r.decision||'pending',r.created_at])];
  const csv='\uFEFF'+lines.map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
- const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='shipping-collections-preview.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='shipping-collections.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
 };load();
 </script></body></html>
