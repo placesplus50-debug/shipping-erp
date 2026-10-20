@@ -111,9 +111,42 @@ function openRoute(items,origin){
  window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer');
 }
 let insideMap=null,insideMapLayers=[],insideMapWatch=null,insideMapPosition=null;
+let insideMapRequest=0,insideMapLastRouteAt=0,insideMapLastOrigin=null,insideMapLastOrder='',insideMapRouteTimer=null;
 function stopInsideMapWatch(){if(insideMapWatch!==null&&navigator.geolocation)navigator.geolocation.clearWatch(insideMapWatch);insideMapWatch=null}
+function resetInsideMapRoute(){insideMapRequest++;clearTimeout(insideMapRouteTimer);insideMapRouteTimer=null;insideMapLastOrigin=null;insideMapLastOrder='';insideMapLastRouteAt=0}
+function drawInsideMapRoute(point,orderId){
+ if(!insideMapPosition||!insideMap)return;
+ const origin=insideMapPosition,now=Date.now();
+ if(insideMapLastOrder===orderId&&insideMapLastOrigin&&distanceKm(origin,insideMapLastOrigin)<0.12)return;
+ if(now-insideMapLastRouteAt<15000){
+  clearTimeout(insideMapRouteTimer);
+  insideMapRouteTimer=setTimeout(()=>drawInsideMapRoute(point,orderId),15000-(now-insideMapLastRouteAt));
+  return;
+ }
+ insideMapLastRouteAt=now;insideMapLastOrigin=[...origin];insideMapLastOrder=orderId;
+ const request=++insideMapRequest;
+ const url='https://router.project-osrm.org/route/v1/driving/'+origin[1]+','+origin[0]+';'+point[1]+','+point[0]+'?overview=full&geometries=geojson';
+ $('insideMapStatus').textContent='جارٍ حساب مسار القيادة...';
+ const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),9000);
+ fetch(url,{signal:controller.signal}).then(r=>{if(!r.ok)throw Error('route unavailable');return r.json()}).then(data=>{
+  if(request!==insideMapRequest||$('insideMapPanel').hidden||$('insideMapPanel').dataset.orderId!==orderId)return;
+  const route=data.routes&&data.routes[0];
+  if(!route||!route.geometry||!Array.isArray(route.geometry.coordinates))throw Error('route missing');
+  insideMapLayers.filter(l=>l._isDriverRoute).forEach(l=>{insideMap.removeLayer(l);insideMapLayers=insideMapLayers.filter(x=>x!==l)});
+  const line=L.polyline(route.geometry.coordinates.map(p=>[p[1],p[0]]),{color:'#5842a8',weight:5,opacity:.85}).addTo(insideMap);
+  line._isDriverRoute=true;insideMapLayers.push(line);
+  insideMap.fitBounds(line.getBounds(),{padding:[30,30],maxZoom:16});
+  const km=(route.distance/1000).toFixed(1),minutes=Math.max(1,Math.round(route.duration/60));
+  $('insideMapStatus').textContent='🚗 المسافة على الطريق: '+km+' كم • الوقت التقديري: '+minutes+' دقيقة (بدون بيانات زحمة مباشرة)';
+ }).catch(()=>{
+  if(request!==insideMapRequest||$('insideMapPanel').hidden)return;
+  $('insideMapStatus').textContent='تعذر حساب مسار الشوارع الآن. الخط المتقطع تقريبي؛ استخدم Google Maps للملاحة.';
+ }).finally(()=>clearTimeout(timeout));
+}
 function showInsideMap(order){
- const panel=$('insideMapPanel');panel.hidden=false;panel.dataset.orderId=String(order['Order ID']);
+ const panel=$('insideMapPanel'),orderId=String(order['Order ID']);
+ if(panel.dataset.orderId!==orderId)resetInsideMapRoute();
+ panel.hidden=false;panel.dataset.orderId=orderId;
  $('insideMapExternal').href=mapLink(order)||'#';
  const point=gpsPoint(order);
  if(!point){$('insideMapStatus').textContent='الموقع لا يحتوي على إحداثيات دقيقة؛ استخدم Google Maps.';return}
@@ -122,14 +155,15 @@ function showInsideMap(order){
  insideMapLayers.forEach(layer=>insideMap.removeLayer(layer));insideMapLayers=[];
  insideMapLayers.push(L.marker(point).addTo(insideMap).bindPopup('موقع الشحنة'));
  if(insideMapPosition){
-  insideMapLayers.push(L.circleMarker(insideMapPosition,{radius:8,color:'#5842a8',fillColor:'#d2ec6d',fillOpacity:1}).addTo(insideMap));
-  insideMapLayers.push(L.polyline([insideMapPosition,point],{color:'#5842a8',dashArray:'7,8'}).addTo(insideMap));
+  insideMapLayers.push(L.circleMarker(insideMapPosition,{radius:8,color:'#5842a8',fillColor:'#d2ec6d',fillOpacity:1}).addTo(insideMap).bindPopup('موقعي'));
+  const fallback=L.polyline([insideMapPosition,point],{color:'#5842a8',dashArray:'7,8',opacity:.6}).addTo(insideMap);
+  fallback._isDriverRoute=true;insideMapLayers.push(fallback);
   insideMap.fitBounds([insideMapPosition,point],{padding:[30,30],maxZoom:15});
- }else insideMap.setView(point,14);
- $('insideMapStatus').textContent='الخط المتقطع يوضح الاتجاه التقريبي وليس طريق القيادة.';
+  drawInsideMapRoute(point,orderId);
+ }else{$('insideMapStatus').textContent='اضغط متابعة موقعي لحساب مسار القيادة والمسافة والوقت المتوقع.';insideMap.setView(point,14)}
  requestAnimationFrame(()=>insideMap.invalidateSize());
 }
-$('insideMapClose').onclick=()=>{stopInsideMapWatch();$('insideMapPanel').hidden=true};
+$('insideMapClose').onclick=()=>{stopInsideMapWatch();resetInsideMapRoute();$('insideMapPanel').hidden=true};
 $('insideMapStop').onclick=()=>{stopInsideMapWatch();$('insideMapStatus').textContent='تم إيقاف متابعة الموقع.'};
 $('insideMapFollow').onclick=()=>{
  if(!navigator.geolocation){$('insideMapStatus').textContent='المتصفح لا يدعم الموقع.';return}
@@ -141,7 +175,7 @@ $('insideMapFollow').onclick=()=>{
   if(order)showInsideMap(order);
  },()=>{$('insideMapStatus').textContent='تعذر الوصول لموقعك.';stopInsideMapWatch()},{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
 };
-window.addEventListener('pagehide',stopInsideMapWatch);
+window.addEventListener('pagehide',()=>{stopInsideMapWatch();resetInsideMapRoute()});
 let plannedStops=[];
 let arrivedStopIds=new Set();
 let routeStorageKey='';
