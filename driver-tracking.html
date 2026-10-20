@@ -1,0 +1,25 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>متابعة المناديب | Shipping Pulse</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><style>*{box-sizing:border-box}body{margin:0;font-family:Cairo,Tahoma,Arial,sans-serif;background:#f7f6fb;color:#251741}header{background:#251741;color:white;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}header a{color:#d2ec6d;text-decoration:none}main{max-width:1150px;margin:auto;padding:20px}h1{font-size:24px}.panel{background:white;padding:16px;border:1px solid #eae6f2;border-radius:18px}#fleetMap{height:480px;border-radius:14px;direction:ltr;background:#eeedf3}#fleetList{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:15px}.driver{padding:15px;border:1px solid #eae6f2;border-radius:12px}button{border:0;border-radius:10px;padding:10px 14px;background:#d2ec6d;color:#251741;font-weight:bold;cursor:pointer}.muted{color:#776b87;font-size:13px}@media(max-width:650px){#fleetMap{height:350px}}</style></head><body><header><strong>Shipping Pulse | متابعة المناديب</strong><a href="/home">← لوحة الإدارة</a></header><main><h1>📍 مواقع المناديب</h1><p class="muted">تظهر المواقع فقط بعد موافقة المندوب على المشاركة. «متصل» يعني تحديث الموقع خلال آخر دقيقتين. لا يتم تتبع المندوب بعد إيقاف المشاركة.</p><section class="panel"><button id="refresh">تحديث المواقع</button><p id="status" role="status" class="muted">جارٍ التحميل...</p><div id="fleetMap"></div><div id="fleetList"></div></section></main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
+const el=id=>document.getElementById(id);let map,markers=[];
+if(window.L){map=L.map('fleetMap').setView([30.0444,31.2357],10);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map)}
+const safeTime=s=>{const d=new Date(s);return Number.isFinite(d.getTime())?d.toLocaleString('ar-EG'):'غير معروف'};
+async function load(){
+ try{
+  const res=await fetch('/api/driver-live-location',{credentials:'same-origin',cache:'no-store'});
+  if(res.status===401){location.href='/login.html';return}
+  if(res.status===403){el('status').textContent='هذه الصفحة متاحة للمدير فقط.';return}
+  const data=await res.json();if(!res.ok)throw Error(data.error||'تعذر تحميل المواقع');
+  markers.forEach(m=>m.remove());markers=[];el('fleetList').replaceChildren();
+  const locations=data.locations||[];el('status').textContent=locations.length?'عدد المناديب الذين شاركوا مواقعهم خلال آخر 24 ساعة: '+locations.length:'لا توجد مواقع مشاركة حاليًا.';
+  for(const d of locations){
+   const online=Date.now()-Date.parse(d.updated_at)<120000;
+   if(map){const marker=L.marker([d.latitude,d.longitude]).addTo(map).bindPopup('المندوب: '+d.driver_id+' — '+(online?'متصل':'آخر موقع معروف'));markers.push(marker)}
+   const card=document.createElement('div');card.className='driver';
+   const title=document.createElement('strong');title.textContent='🚚 '+d.driver_id+' — '+(online?'🟢 متصل':'⚪ غير متصل');
+   const note=document.createElement('p');note.className='muted';note.textContent='آخر تحديث: '+safeTime(d.updated_at)+' | دقة تقريبية: '+Math.round(d.accuracy_m)+' متر';
+   card.append(title,note);el('fleetList').append(card);
+  }
+  if(map&&markers.length)map.fitBounds(L.featureGroup(markers).getBounds(),{padding:[35,35],maxZoom:14});
+ }catch(e){el('status').textContent='تعذر تحميل المواقع: '+e.message}
+}
+el('refresh').onclick=load;load();setInterval(()=>{if(!document.hidden)load()},30000);
+</script></body></html>
