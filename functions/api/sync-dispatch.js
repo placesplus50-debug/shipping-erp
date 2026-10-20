@@ -74,3 +74,33 @@ export async function onRequestPost({request,env}){
  return reply({...result,mode:"manual_dispatch"});
  }catch{return safeError()}
 }
+
+export async function onRequestGet({request,env}){
+ if(!env.DB)return safeError();
+ try{
+  const user=await currentUser(request,env);
+  if(!user)return reply({error:"Authentication required"},401);
+  if(!["super_admin","admin"].includes(user.role))return reply({error:"Admin only"},403);
+  const token=await getAccessToken(env);
+  const inspection={enabled:env.SHEETS_SYNC_ENABLED==="true",readOnly:true,tabs:{},pending:[]};
+  for(const tab of ["TRACKING","COLLECTIONS"]){
+   const sheet=await sheets(token,tab+"!A1:J");
+   const values=sheet.values||[];
+   const headerMatch=JSON.stringify(values[0]||[])===JSON.stringify(headers[tab]);
+   inspection.tabs[tab]={headerMatch,existingRows:Math.max(0,values.length-1)};
+  }
+  const {results}=await env.DB.prepare("SELECT * FROM sheet_sync_outbox WHERE state!='sent' ORDER BY id LIMIT 20").all();
+  for(const item of results||[]){
+   let row=null,error=null;
+   try{row=await rowFor(env,item)}catch(e){error=String(e.message||e)}
+   const tab=item.destination_tab;
+   let matchCount=0;
+   if(row&&headers[tab]){
+    const existing=await sheets(token,tab+"!A1:A");
+    matchCount=(existing.values||[]).slice(1).filter(r=>r[0]===row[0]).length;
+   }
+   inspection.pending.push({id:item.id,eventType:item.event_type,tab,state:item.state,attempts:item.attempts,recordId:row?.[0]||null,orderId:row?.[1]||null,willUpdateExisting:matchCount===1,duplicateId:matchCount>1,error,amount:tab==="COLLECTIONS"&&row?{collected:row[3],remitted:row[4],outstanding:row[5],status:row[7]}:undefined});
+  }
+  return reply(inspection);
+ }catch(e){return reply({error:"Read-only sync inspection failed",detail:String(e.message||e).slice(0,120)},503)}
+}
