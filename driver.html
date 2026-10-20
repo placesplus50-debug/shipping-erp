@@ -1058,4 +1058,6 @@ function onKey(e){if(e.key==='Escape')dismiss()}
 close.onclick=dismiss;overlay.addEventListener('click',e=>{if(e.target===overlay)dismiss()});document.addEventListener('keydown',onKey);close.focus();
 };
 })();
+</script><script id="sp-driver-navigation-pages">
+document.addEventListener('click',function(event){const link=event.target.closest&&event.target.closest('.driver-bottom-nav a[data-driver-section]');if(!link)return;const section=link.dataset.driverSection;const target=section==='route'?'/driver-route.html':section==='collections'?'/driver-wallet.html':null;if(target){event.preventDefault();event.stopImmediatePropagation();window.location.assign(target)}},true);
 </script></body></html>
