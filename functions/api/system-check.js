@@ -38,7 +38,18 @@ export async function onRequestGet({request,env}){
    const headersOk=Object.values(data.tabs||{}).every(t=>t.headerMatch);
    add("sheets_reconciliation","مطابقة Google Sheets وD1",problems===0&&headersOk&&!(data.pending||[]).length,problems+" اختلاف، "+(data.pending||[]).length+" عملية معلقة");
   }else checks.push({id:"sheets_reconciliation",label:"مطابقة Google Sheets وD1",status:"fail",detail:"تعذر الفحص: HTTP "+sync.status});
-  checks.push({id:"role_api",label:"اختبار صلاحيات كل دور على API",status:"manual",detail:"الفحص الحالي لا ينشئ جلسات أو حسابات ولا ينفذ عمليات كتابة. اختبار الرفض الفعلي يحتاج بيئة اختبار معزولة."});
+  // Verify real route handlers reject an anonymous request, without any DB writes.
+  const anonymous=new Request(new URL(request.url).origin+"/api/collections",{method:"GET"});
+  const [{onRequestGet:collectionsGet},{onRequestGet:usersGet},{onRequestGet:ordersGet}]=await Promise.all([import("./collections.js"),import("./users.js"),import("./orders.js")]);
+  const protectedRoutes=[["collections",collectionsGet],["users",usersGet],["orders",ordersGet],["sync",inspectSync]];
+  const denials=[];
+  for(const [name,handler] of protectedRoutes){
+   try{const result=await handler({request:anonymous,env});denials.push({route:name,status:result.status,blocked:[401,403].includes(result.status)})}
+   catch(e){denials.push({route:name,status:"error",blocked:false})}
+  }
+  const allBlocked=denials.every(x=>x.blocked);
+  add("anonymous_api","رفض طلبات API بدون تسجيل دخول",allBlocked,denials.map(x=>x.route+": "+x.status).join("، "));
+  checks.push({id:"role_api",label:"اختبار صلاحيات كل دور على API",status:"manual",detail:"تم فحص الطلبات المجهولة فقط؛ عزل المندوب واختبار كل دور يحتاج جلسات اختبار معزولة."});
   return reply({readOnly:true,generatedAt:new Date().toISOString(),checks,summary:{passed:checks.filter(c=>c.status==="pass").length,failed:checks.filter(c=>c.status==="fail").length,needsIntegration:checks.filter(c=>c.status==="manual").length},writesPerformed:0});
  }catch(e){return reply({error:"System check unavailable",detail:String(e.message||e).slice(0,140)},503)}
 }
