@@ -57,6 +57,6 @@ export async function onRequestGet({request,env}){
    for(const e of rows.results||[])if(!latest.has(e.order_id))latest.set(e.order_id,e.new_status);
    for(const o of scoped)if(latest.has(o["Order ID"]))o["Effective Shipping Status"]=latest.get(o["Order ID"]);
   }
-  return reply({orders:scoped,source:"google_sheets",scope:actor.role==="driver"?"assigned_driver":"authorized_staff",readOnly:true,statusSource:"preview_d1_overlay"});
+  return reply({orders:scoped,source:"google_sheets",scope:actor.role==="driver"?"assigned_driver":"authorized_staff",readOnly:true,statusSource:"d1_overlay"});
  }catch{return safeError()}
 }
