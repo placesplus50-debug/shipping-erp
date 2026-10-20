@@ -53,7 +53,7 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
 <div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي غير المسجل للتحصيل</small><strong id="cod">—</strong></div></div>
 <div class="notice">مرحلة اختبار: البيانات تُقرأ مباشرة من Google Sheets. تغيير الحالة وتسجيل التحصيل يُحفظان في D1 وتُرسل تحديثاتهما إلى Google Sheets عند تفعيل المزامنة.</div>
 <div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
-<div class="location-toolbar"><button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يرتب الشحنات بإحداثيات GPS تقريبياً ويعرض قائمة المحطات مع زر ملاحة لكل شحنة. الموقع يُطلب مرة واحدة ولا يُحفظ. رابط Google Maps يعرض أول 9 محطات فقط.</p><div id="message" role="status" aria-live="polite"></div><section id="routePlan" hidden></section><section id="orders" class="orders"></section></main>
+<div class="location-toolbar"><button type="button" id="sortByLocation">📍 رتّب حسب موقعي</button> <button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يرتب الشحنات بإحداثيات GPS تقريبياً ويعرض قائمة المحطات مع زر ملاحة لكل شحنة. الموقع يُطلب مرة واحدة ولا يُحفظ. رابط Google Maps يعرض أول 9 محطات فقط.</p><div id="message" role="status" aria-live="polite"></div><section id="routePlan" hidden></section><section id="orders" class="orders"></section></main>
 <script>
 const $=id=>document.getElementById(id);let orders=[],claims=[],historyComplete=true;
 function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
@@ -171,6 +171,24 @@ function render(){
  const visible=orders.filter(o=>(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
  const routeOrders=visible.filter(o=>preciseLocation(o)&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status']));
  $('routeMap').disabled=routeOrders.length===0;
+ $('sortByLocation').disabled=routeOrders.length===0;
+ $('sortByLocation').onclick=()=>{
+  if(!navigator.geolocation){$('message').textContent='المتصفح لا يدعم تحديد الموقع؛ الترتيب الحالي محفوظ.';return}
+  const button=$('sortByLocation');button.disabled=true;button.textContent='جارٍ تحديد موقعك...';
+  navigator.geolocation.getCurrentPosition(p=>{
+   const active=routeOrders.filter(o=>!arrivedStopIds.has(String(o['Order ID'])));
+   const arrived=plannedStops.filter(o=>arrivedStopIds.has(String(o['Order ID']))&&routeOrders.some(a=>String(a['Order ID'])===String(o['Order ID'])));
+   const gps=active.filter(o=>gpsPoint(o)),others=active.filter(o=>!gpsPoint(o));
+   plannedStops=arrived.concat(nearestRoute(gps,[p.coords.latitude,p.coords.longitude]),others);
+   saveRouteProgress();showPlannedStops();
+   $('message').textContent='تم ترتيب المحطات المتبقية حسب الأقرب لموقعك. موقعك لم يُحفظ.';
+   button.disabled=false;button.textContent='📍 رتّب حسب موقعي';
+  },()=>{
+   $('message').textContent='تعذر تحديد الموقع أو لم يتم السماح به؛ احتفظنا بالترتيب الحالي.';
+   button.disabled=false;button.textContent='📍 رتّب حسب موقعي';
+  },{enableHighAccuracy:false,timeout:10000,maximumAge:60000});
+ };
+
  $('routeMap').textContent='🗺️ ترتيب المسار وفتح Google Maps ('+routeOrders.length+')';
  $('routeMap').onclick=()=>{
   if(!routeOrders.length)return;
