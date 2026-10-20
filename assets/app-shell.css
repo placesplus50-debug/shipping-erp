@@ -56,3 +56,12 @@ body.sp-app{margin:0;padding:0 var(--sp-side) 0 0;background:var(--sp-bg);color:
  .sp-app .stats,.sp-app .cards,.sp-app .metrics{gap:9px}
  .sp-app :is(.card,.metric,.stat){padding:12px}
 }
+
+/* Fix RTL drawer sliding direction and avoid WebView lime strip */
+@media(max-width:800px){
+ .sp-app .sp-sidebar{right:0!important;left:auto!important;transform:translate3d(105%,0,0)!important;visibility:hidden;max-width:min(320px,88vw)!important;width:min(320px,88vw)!important}
+ body.sp-menu-open .sp-sidebar{transform:translate3d(0,0,0)!important;visibility:visible}
+ .sp-app .sp-shade:not([hidden]){position:fixed!important;inset:0!important;background:#160c29aa!important;z-index:39!important;display:block!important}
+ body.sp-menu-open{overflow:hidden}
+ .sp-app .sp-nav{white-space:normal;overflow-wrap:break-word}
+}
