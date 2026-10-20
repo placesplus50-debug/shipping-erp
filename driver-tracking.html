@@ -11,16 +11,16 @@ async function load(){
   markers.forEach(m=>m.remove());markers=[];el('fleetList').replaceChildren();
   const locations=data.locations||[];el('status').textContent=locations.length?'عدد المناديب الذين شاركوا مواقعهم خلال آخر 24 ساعة: '+locations.length:'لا توجد مواقع مشاركة حاليًا.';
   for(const d of locations){
-   const online=Date.now()-Date.parse(d.updated_at)<120000;
-   if(map){const marker=L.marker([d.latitude,d.longitude]).addTo(map).bindPopup('المندوب: '+d.driver_id+' — '+(online?'متصل':'آخر موقع معروف'));markers.push(marker)}
+   const online=Date.now()-Date.parse(d.updated_at)<120000;const event=(window.latestSharing||{})[d.driver_id];const state=event?.event_type==='sharing_stop'?'🔴 أوقف المشاركة':online?'🟢 متصل':'🟠 انقطع التحديث';
+   if(map){const marker=L.marker([d.latitude,d.longitude]).addTo(map).bindPopup('المندوب: '+d.driver_id+' — '+state);markers.push(marker)}
    const card=document.createElement('div');card.className='driver';
-   const title=document.createElement('strong');title.textContent='🚚 '+d.driver_id+' — '+(online?'🟢 متصل':'⚪ غير متصل');
+   const title=document.createElement('strong');title.textContent='🚚 '+d.driver_id+' — '+state;
    const note=document.createElement('p');note.className='muted';note.textContent='آخر تحديث: '+safeTime(d.updated_at)+' | دقة تقريبية: '+Math.round(d.accuracy_m)+' متر';
    card.append(title,note);el('fleetList').append(card);
   }
   if(map&&markers.length)map.fitBounds(L.featureGroup(markers).getBounds(),{padding:[35,35],maxZoom:14});
  }catch(e){el('status').textContent='تعذر تحميل المواقع: '+e.message}
 }
-async function loadShiftEvents(){try{const r=await fetch('/api/driver-shift',{credentials:'same-origin',cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'غير متاح');const events=d.events||[];el('shiftSummary').textContent='آخر '+events.length+' حدث خلال 7 أيام';el('shiftEvents').replaceChildren();for(const e of events.slice(0,40)){const p=document.createElement('p');p.className='muted';const labels={shift_start:'بدأ الوردية',shift_end:'أنهى الوردية',sharing_start:'فعّل مشاركة الموقع',sharing_stop:'أوقف مشاركة الموقع'};p.textContent=e.driver_id+' — '+(labels[e.event_type]||e.event_type)+' — '+safeTime(e.created_at);el('shiftEvents').append(p)}}catch(e){el('shiftSummary').textContent='سجل الورديات غير متاح: '+e.message}}
-el('refresh').onclick=()=>{load();loadShiftEvents()};loadShiftEvents();load();setInterval(()=>{if(!document.hidden)load()},30000);
+async function loadShiftEvents(){try{const r=await fetch('/api/driver-shift',{credentials:'same-origin',cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'غير متاح');const events=d.events||[];window.latestSharing={};for(const e of events){if(!window.latestSharing[e.driver_id]&&(e.event_type==='sharing_start'||e.event_type==='sharing_stop'))window.latestSharing[e.driver_id]=e;}el('shiftSummary').textContent='آخر '+events.length+' حدث خلال 7 أيام';el('shiftEvents').replaceChildren();for(const e of events.slice(0,40)){const p=document.createElement('p');p.className='muted';const labels={shift_start:'بدأ الوردية',shift_end:'أنهى الوردية',sharing_start:'فعّل مشاركة الموقع',sharing_stop:'أوقف مشاركة الموقع'};p.textContent=e.driver_id+' — '+(labels[e.event_type]||e.event_type)+' — '+safeTime(e.created_at);el('shiftEvents').append(p)}}catch(e){el('shiftSummary').textContent='سجل الورديات غير متاح: '+e.message}}
+el('refresh').onclick=async()=>{await loadShiftEvents();await load()};el('refresh').click();setInterval(()=>{if(!document.hidden)el('refresh').click()},30000);
 </script></body></html>
