@@ -32,7 +32,7 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
 <div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي غير المسجل للتحصيل</small><strong id="cod">—</strong></div></div>
 <div class="notice">مرحلة اختبار: البيانات تُقرأ مباشرة من Google Sheets. تغيير الحالة وتسجيل التحصيل يُحفظان في D1 وتُرسل تحديثاتهما إلى Google Sheets عند تفعيل المزامنة.</div>
 <div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
-<div class="location-toolbar"><button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يستخدم المواقع الدقيقة المسجلة في Google Sheets فقط؛ الطلبات بدون موقع دقيق لن تدخل في المسار.</p><div id="message" role="status" aria-live="polite"></div><section id="orders" class="orders"></section></main>
+<div class="location-toolbar"><button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يرتب الشحنات بإحداثيات GPS تقريبياً ويعرض قائمة المحطات مع زر ملاحة لكل شحنة. الموقع يُطلب مرة واحدة ولا يُحفظ. رابط Google Maps يعرض أول 9 محطات فقط.</p><div id="message" role="status" aria-live="polite"></div><section id="routePlan" hidden></section><section id="orders" class="orders"></section></main>
 <script>
 const $=id=>document.getElementById(id);let orders=[],claims=[],historyComplete=true;
 function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
@@ -59,19 +59,76 @@ function mapLink(order){
  const target=preciseLocation(order)||String(order['Address']||order['Full Address']||order['City / Area']||'').trim();
  return target?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(target):null;
 }
+// Route planning is calculated in the browser only. Location is requested once on click, never tracked or saved.
+function gpsPoint(order){
+ const p=preciseLocation(order);
+ if(!p)return null;
+ const m=p.match(/^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/);
+ return m?[Number(m[1]),Number(m[2])]:null;
+}
+function distanceKm(a,b){
+ const rad=Math.PI/180,dLat=(b[0]-a[0])*rad,dLng=(b[1]-a[1])*rad;
+ const h=Math.sin(dLat/2)**2+Math.cos(a[0]*rad)*Math.cos(b[0]*rad)*Math.sin(dLng/2)**2;
+ return 12742*Math.asin(Math.min(1,Math.sqrt(h)));
+}
+function nearestRoute(items,start){
+ const remaining=[...items],result=[];let cursor=start;
+ while(remaining.length){
+  let idx=0,best=Infinity;
+  for(let i=0;i<remaining.length;i++){const p=gpsPoint(remaining[i]);const d=p&&cursor?distanceKm(cursor,p):Infinity;if(d<best){best=d;idx=i}}
+  const next=remaining.splice(idx,1)[0];result.push(next);cursor=gpsPoint(next)||cursor;
+ }
+ return result;
+}
+function openRoute(items,origin){
+ const stops=items.slice(0,9).map(o=>preciseLocation(o));
+ if(!stops.length)return;
+ if(stops.length===1){window.open(mapLink(items[0]),'_blank','noopener,noreferrer');return}
+ const destination=stops[stops.length-1],params=new URLSearchParams({api:'1',destination,travelmode:'driving'});
+ if(origin)params.set('origin',origin.join(','));
+ if(stops.length>1)params.set('waypoints',stops.slice(0,-1).join('|'));
+ window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer');
+}
+let plannedStops=[];
+function showPlannedStops(){
+ const q=$('search').value.trim().toLowerCase(),f=$('filter').value;
+ const eligible=new Map(orders.filter(o=>preciseLocation(o)&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status'])&&(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q)))).map(o=>[o['Order ID'],o]));
+ plannedStops=plannedStops.filter(o=>eligible.has(o['Order ID'])).map(o=>eligible.get(o['Order ID']));
+ const panel=$('routePlan');panel.replaceChildren();panel.hidden=!plannedStops.length;
+ if(!plannedStops.length)return;
+ panel.append(node('h3','','محطات التوصيل بالترتيب ('+plannedStops.length+')'));
+ plannedStops.forEach((o,i)=>{
+  const card=node('div','card');
+  card.append(node('strong','',(i+1)+'. '+o['Order ID']+' — '+(o['City / Area']||'')));
+  const link=node('a','map-link',i===0?'ابدأ الملاحة للشحنة التالية':'ملاحة لهذه الشحنة');
+  link.href=mapLink(o);link.target='_blank';link.rel='noopener noreferrer';card.append(link);panel.append(card);
+ });
+}
 function render(){
  const q=$('search').value.trim().toLowerCase(),f=$('filter').value;
  const visible=orders.filter(o=>(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
  const routeOrders=visible.filter(o=>preciseLocation(o)&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status']));
  $('routeMap').disabled=routeOrders.length===0;
+ $('routeMap').textContent='🗺️ ترتيب أقرب الشحنات وفتح المسار ('+routeOrders.length+')';
  $('routeMap').onclick=()=>{
-  const addresses=routeOrders.slice(0,9).map(o=>preciseLocation(o));
-  if(!addresses.length)return;
-  if(addresses.length===1){window.open(mapLink(routeOrders[0]),'_blank','noopener,noreferrer');return}
-  const destination=addresses.pop(),params=new URLSearchParams({api:'1',destination,travelmode:'driving'});
-  if(addresses.length>1)params.set('waypoints',addresses.slice(0,-1).join('|'));
-  window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer');
+  if(!routeOrders.length)return;
+  // Open a tab synchronously to avoid popup blockers while requesting one-time location.
+  const tab=window.open('about:blank','_blank');
+  const navigate=origin=>{
+   const withCoordinates=routeOrders.filter(o=>gpsPoint(o));
+   const withoutCoordinates=routeOrders.filter(o=>!gpsPoint(o));
+   const ordered=origin?nearestRoute(withCoordinates,origin).concat(withoutCoordinates):routeOrders;plannedStops=ordered;showPlannedStops();
+   const stops=ordered.slice(0,9).map(o=>preciseLocation(o));
+   if(!stops.length){tab?.close();return}
+   let url;
+   if(stops.length===1)url=mapLink(ordered[0]);
+   else {const params=new URLSearchParams({api:'1',destination:stops[stops.length-1],travelmode:'driving'});if(origin)params.set('origin',origin.join(','));params.set('waypoints',stops.slice(0,-1).join('|'));url='https://www.google.com/maps/dir/?'+params.toString()}
+   if(tab)tab.location.replace(url);else window.open(url,'_blank','noopener,noreferrer');
+  };
+  if(!navigator.geolocation){navigate(null);return}
+  navigator.geolocation.getCurrentPosition(p=>navigate([p.coords.latitude,p.coords.longitude]),()=>navigate(null),{enableHighAccuracy:false,timeout:7000,maximumAge:60000});
  };
+ showPlannedStops();
  const root=$('orders');root.replaceChildren();
  if(!visible.length){root.append(node('div','empty','لا توجد شحنات مطابقة'));return}
  for(const o of visible){
