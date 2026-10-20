@@ -32,20 +32,43 @@ button{border-color:#e4ddef}button:hover{border-color:#a69bce}button:focus-visib
 <div class="stats"><div class="stat"><small>عدد الشحنات</small><strong id="count">—</strong></div><div class="stat"><small>المتبقي غير المسجل للتحصيل</small><strong id="cod">—</strong></div></div>
 <div class="notice">مرحلة اختبار: البيانات تُقرأ مباشرة من Google Sheets. تغيير الحالة وتسجيل التحصيل يُحفظان في D1 وتُرسل تحديثاتهما إلى Google Sheets عند تفعيل المزامنة.</div>
 <div class="toolbar"><input id="search" placeholder="ابحث برقم الشحنة أو اسم العميل أو المنطقة" aria-label="بحث"><select id="filter" aria-label="فلترة حالة الشحنة"><option value="">كل الحالات</option></select></div>
-<div class="location-toolbar"><button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">الملاحة تعتمد على المنطقة المسجلة؛ تحديد باب العميل يحتاج رابط موقع دقيق. لا يوجد تتبع مباشر للمندوب.</p><div id="message" role="status" aria-live="polite"></div><section id="orders" class="orders"></section></main>
+<div class="location-toolbar"><button type="button" id="routeMap">🗺️ عرض مسار الشحنات الظاهرة</button></div><p class="location-note">المسار يستخدم المواقع الدقيقة فقط. الطلبات بدون رابط موقع أو إحداثيات لن تدخل في المسار. لا يوجد تتبع مباشر للمندوب.</p><div id="message" role="status" aria-live="polite"></div><section id="orders" class="orders"></section></main>
 <script>
 const $=id=>document.getElementById(id);let orders=[],claims=[],historyComplete=true;
 function fmt(v){return new Intl.NumberFormat('ar-EG').format(Number(String(v||'0').replace(/,/g,''))||0)}
 function node(tag,cls,txt){const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el}
 function remaining(o){const due=Math.round((Number(String(o['COD Due']||0).replace(/,/g,''))||0)*100);const claimed=claims.filter(c=>c.order_id===o['Order ID']&&c.decision!=='rejected').reduce((n,c)=>n+c.amount_cents,0);return Math.max(0,due-claimed)/100}
-function mapLink(order){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(order['City / Area']||'')}
+// Navigation is read-only. Precise coordinates are preferred; a city is never treated as a precise pin.
+function preciseLocation(order){
+ const raw=String(order['Google Maps URL']||order['Maps URL']||order['Location URL']||order['Customer Location']||'').trim();
+ const lat=Number(order.Latitude??order.latitude),lng=Number(order.Longitude??order.longitude);
+ if(raw){
+  if(/^[-+]?\\d{1,2}\\.\\d+\\s*,\\s*[-+]?\\d{1,3}\\.\\d+$/.test(raw)){const [a,b]=raw.split(',').map(Number);if(Math.abs(a)<=90&&Math.abs(b)<=180)return a+','+b}
+  try{
+   const u=new URL(raw);
+   if(u.protocol!=='https:'||!/(^|\\.)(google\\.[a-z.]+|goo\\.gl|maps\\.app\\.goo\\.gl)$/.test(u.hostname))return null;
+   for(const candidate of [u.searchParams.get('query'),u.searchParams.get('q'),u.searchParams.get('ll'),decodeURIComponent(u.pathname.match(/@(-?\\d+\\.\\d+,-?\\d+\\.\\d+)/)?.[1]||'')]){
+    const m=String(candidate||'').match(/^(-?\\d+(?:\\.\\d+)?),\\s*(-?\\d+(?:\\.\\d+)?)$/);
+    if(m&&Math.abs(+m[1])<=90&&Math.abs(+m[2])<=180)return m[1]+','+m[2];
+   }
+   // Google Maps place links and short links can resolve to an exact place in Maps.
+   return raw;
+  }catch{return null}
+ }
+ if(Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180&&(lat!==0||lng!==0))return lat+','+lng;
+ return null;
+}
+function mapLink(order){
+ const target=preciseLocation(order)||String(order['Address']||order['Full Address']||order['City / Area']||'').trim();
+ return target?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(target):null;
+}
 function render(){
  const q=$('search').value.trim().toLowerCase(),f=$('filter').value;
  const visible=orders.filter(o=>(!f||(o._effectiveStatus||o['Shipping Status'])===f)&&(!q||[o['Order ID'],o.Customer,o['City / Area']].some(v=>String(v||'').toLowerCase().includes(q))));
- const routeOrders=visible.filter(o=>String(o['City / Area']||'').trim()&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status']));
+ const routeOrders=visible.filter(o=>preciseLocation(o)&&!['Delivered','Returned'].includes(o._effectiveStatus||o['Shipping Status']));
  $('routeMap').disabled=routeOrders.length===0;
  $('routeMap').onclick=()=>{
-  const addresses=routeOrders.slice(0,9).map(o=>String(o['City / Area']).trim());
+  const addresses=routeOrders.slice(0,9).map(o=>preciseLocation(o));
   if(!addresses.length)return;
   if(addresses.length===1){window.open(mapLink(routeOrders[0]),'_blank','noopener,noreferrer');return}
   const destination=addresses.pop(),params=new URLSearchParams({api:'1',destination,travelmode:'driving'});
@@ -61,7 +84,7 @@ function render(){
  const details=node('div','details');
  details.append(node('span','', '📍 '+(o['City / Area']||'—')),node('span','', '💳 '+(o['Payment Type']||'—')),node('span','', 'حالة الدفع: '+(claims.some(c=>c.order_id===o['Order ID']&&c.decision==='approved')?(remaining(o)===0?'التحصيل معتمد بالكامل':'تحصيل معتمد جزئيًا'):claims.some(c=>c.order_id===o['Order ID']&&!c.decision)?'تحصيل بانتظار المراجعة':(o['Payment Status']||'—'))));
  c.append(details);
- if(String(o['City / Area']||'').trim()){const locationLink=node('a','', '📍 عرض موقع الشحنة على الخريطة');locationLink.href=mapLink(o);locationLink.target='_blank';locationLink.rel='noopener noreferrer';locationLink.className='map-link';c.append(locationLink)}
+ if(mapLink(o)){const locationLink=node('a','',preciseLocation(o)?'📍 ملاحة إلى موقع العميل':'📍 عرض الموقع التقريبي — يحتاج تأكيد');locationLink.href=mapLink(o);locationLink.target='_blank';locationLink.rel='noopener noreferrer';locationLink.className='map-link';c.append(locationLink)}
  const finalReturn=(o._effectiveStatus||o['Shipping Status'])==='Returned';
  const amount=node('div','money',finalReturn?'مرتجع — لا يوجد تحصيل مطلوب':(o._effectiveStatus==='Delivery failed'?'تعذر التسليم — لا تحصيل حتى إعادة التسليم':'المتبقي غير المسجل: '+fmt(remaining(o))+' ج.م'));c.append(amount);
  if(o.Notes)c.append(node('div','note','ملاحظات: '+o.Notes));
