@@ -365,6 +365,15 @@ body.sp-page-driver #orders .card>.map-link{grid-column:4!important;grid-row:1!i
 body.sp-page-driver #orders .card>button{grid-column:1/-1!important;grid-row:auto!important;min-height:36px!important;background:#d5ed71!important;color:#32204e!important;border-radius:10px!important;font-size:11px!important;padding:6px!important}
 }
 @media(max-width:370px){body.sp-page-driver #orders .card{grid-template-columns:65px minmax(0,1fr) 61px 23px!important}}
+</style><style id="sp-mobile-card-overflow-repair">
+@media(max-width:900px){
+body.sp-page-driver #orders .card .details span:first-child:before{content:none!important}
+body.sp-page-driver #orders .card .sp-card-action-menu{position:fixed!important;top:var(--sp-menu-top,45%)!important;left:var(--sp-menu-left,10px)!important;right:auto!important;width:min(210px,calc(100vw - 24px))!important;max-height:min(260px,45vh)!important;overflow-y:auto!important;z-index:10020!important;box-sizing:border-box!important}
+body.sp-page-driver #orders .card .sp-card-actions:not([open]) .sp-card-action-menu{display:none!important}
+body.sp-page-driver #orders .card>.note{font-size:10px!important;white-space:nowrap!important;text-overflow:ellipsis!important;max-height:18px!important;overflow:hidden!important}
+body.sp-page-driver #orders .card .details span:first-child{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+body.sp-page-driver #orders .card .money{font-size:10px!important;overflow-wrap:normal!important;word-break:normal!important}
+}
 </style></head><body class="sp-app sp-page-driver" data-page="driver"><a class="sp-skip" href="#spMain">تخطَّ إلى المحتوى</a><aside class="sp-sidebar" id="spSidebar" aria-label="القائمة الرئيسية"><a class="sp-brand" href="/home.html"><img src="/assets/shipping-pulse-logo.svg" alt="" width="42" height="42"><span dir="ltr">Shipping Pulse</span></a><nav class="sp-navigation" aria-label="صفحات النظام"><a class="sp-nav" href="/home.html" data-staff><span aria-hidden="true">◈</span>لوحة التحكم</a><a class="sp-nav" href="/orders.html" data-staff><span aria-hidden="true">▦</span>الطلبات والشحنات</a><a class="sp-nav" href="/drivers.html" data-staff><span aria-hidden="true">♙</span>المندوبون</a><a class="sp-nav" href="/collections.html" data-staff><span aria-hidden="true">▤</span>التحصيلات وكشوف الحساب</a><a class="sp-nav" href="/users.html" id="usersNav" data-staff hidden><span aria-hidden="true">♧</span>إدارة المستخدمين</a><a class="sp-nav active" href="#overview" data-driver-section="overview" aria-current="page"><span aria-hidden="true">⌂</span>الرئيسية</a><a class="sp-nav" href="#shipments" data-driver-section="shipments"><span aria-hidden="true">▦</span>شحناتي</a><a class="sp-nav" href="#route" data-driver-section="route"><span aria-hidden="true">⌖</span>خط السير والخريطة</a><a class="sp-nav" href="#collections" data-driver-section="collections"><span aria-hidden="true">▤</span>التحصيلات</a><a class="sp-nav" href="/system-check.html" id="systemCheckNav" data-staff hidden><span aria-hidden="true">✓</span>فحص النظام</a></nav><div class="sp-sidebar-foot">Shipping Pulse · Production</div></aside><button id="spShade" class="sp-shade" aria-label="إغلاق القائمة" hidden></button><header class="sp-header"><div class="sp-title-group"><button type="button" id="spMenu" aria-label="فتح القائمة" aria-controls="spSidebar" aria-expanded="false">☰</button><div><small>Shipping Pulse / شحناتي</small><h1>شحناتي</h1></div></div><div class="sp-account"><span id="username">جارٍ تحميل الحساب</span><button type="button" id="spBack" class="secondary">↩ رجوع</button><button type="button" id="spLogout">تسجيل خروج</button></div></header><p id="spShellStatus" role="status" hidden></p><dialog id="spRoleDialog" aria-labelledby="spRoleTitle"><div class="modal-head"><h2 id="spRoleTitle">واجهة المندوب</h2><button type="button" data-close-role aria-label="إغلاق">×</button></div><div class="modal-body"><p>هذه الصفحة مخصصة لحساب المندوب وتعرض شحناته فقط. لمراجعة الفريق استخدم صفحة المندوبين. اختبار واجهة المندوب يحتاج تسجيل الدخول بحساب مندوب.</p></div><div class="modal-foot"><button type="button" data-close-role>تم</button></div></dialog>
 
 <main id="spMain" tabindex="-1"><div class="heading"><div><h1>شحناتي</h1><p>الطلبات المسندة لحسابك فقط</p></div><button id="reload">↻ تحديث</button></div>
@@ -889,5 +898,20 @@ const money=card.querySelector('.money');if(money&&!money.dataset.refined){money
 }
 if(list)new MutationObserver(enhanceCards).observe(list,{childList:true});enhanceCards();
 const nav=document.querySelector('.driver-bottom-nav');if(nav){const icons={overview:'⌂',shipments:'▤',route:'♧',collections:'▱'};for(const a of nav.querySelectorAll('a')){const span=a.querySelector('span');if(!span)continue;const glyph=a.firstChild;if(glyph&&glyph.nodeType===3)glyph.textContent=(icons[a.dataset.driverSection]||'◈')+' '}}
+})();
+</script><script id="sp-mobile-card-menu-repair">
+(function(){
+const root=document.getElementById('orders');if(!root)return;
+root.addEventListener('click',function(e){
+const summary=e.target.closest('details.sp-card-actions > summary');if(!summary)return;
+const details=summary.parentElement;
+for(const other of root.querySelectorAll('details.sp-card-actions[open]'))if(other!==details)other.open=false;
+const rect=summary.getBoundingClientRect(),width=Math.min(210,window.innerWidth-24);
+const left=Math.max(12,Math.min(window.innerWidth-width-12,rect.right-width));
+const top=rect.bottom+190>window.innerHeight?Math.max(12,rect.top-170):rect.bottom+6;
+details.style.setProperty('--sp-menu-left',left+'px');details.style.setProperty('--sp-menu-top',top+'px');
+});
+document.addEventListener('click',e=>{if(e.target.closest('details.sp-card-actions'))return;for(const d of root.querySelectorAll('details.sp-card-actions[open]'))d.open=false});
+window.addEventListener('scroll',()=>{for(const d of root.querySelectorAll('details.sp-card-actions[open]'))d.open=false},{passive:true});
 })();
 </script></body></html>
